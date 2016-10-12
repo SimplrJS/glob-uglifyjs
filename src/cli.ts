@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import Arguments from './arguments';
 import GlobsUglifyJs from './main';
 
