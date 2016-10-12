@@ -12,13 +12,9 @@ exports.default = yargs
     describe: "Files glob pattern",
     type: "string"
 })
+    .require("pattern", "Pattern required")
     .config('config')
     .alias('c', 'config')
     .default('config', 'glob-uglifyjs.config.json')
-    .option("", {
-    alias: "",
-    describe: "",
-    type: ""
-})
     .usage('Usage: glob-uglifyjs [options]')
     .argv;

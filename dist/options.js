@@ -12,7 +12,9 @@ class OptionsConstructor {
         };
         if (importData != null) {
             if (importData.Cwd != null) {
-                process.chdir(importData.Cwd);
+                if (importData.Cwd.length > 0) {
+                    process.chdir(importData.Cwd);
+                }
                 delete importData.Cwd;
             }
             this.options.Cwd = process.cwd();

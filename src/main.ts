@@ -8,6 +8,18 @@ const JS_EXTENSION = ".js";
 const MINIFY_EXTENSION_PREFIX = ".min";
 
 
+class RejectionError {
+    constructor(private error: NodeJS.ErrnoException | Error, private type: string | undefined = undefined) {
+
+    }
+    get Type() {
+        return this.type;
+    }
+    get Error() {
+        return this.error;
+    }
+}
+
 export default class GlobsUglifyJs {
 
     private globPattern: string;
@@ -27,14 +39,21 @@ export default class GlobsUglifyJs {
     private async main() {
         let rejected = false;
 
-        let filesList = await this.getGlobs(this.globPattern);
+        let filesList = await this.getGlobs(this.globPattern)
+            .catch(error => {
+                console.log(error);
+                rejected = true;
+            });
+        if (rejected) {
+            return;
+        }
 
         if (filesList.length === 0) {
             console.log("No files found.");
             return;
         }
 
-        await this.recursiveUglify(filesList.slice())
+        await this.recursiveUglify(filesList.slice(0))
             .catch(error => {
                 console.log(error);
                 rejected = true;
@@ -45,7 +64,7 @@ export default class GlobsUglifyJs {
         }
 
         if (this.options.RemoveSource) {
-            await this.deleteFiles(filesList.slice())
+            await this.deleteFiles(filesList.slice(0))
                 .catch(error => {
                     console.log(error);
                     rejected = true;
@@ -82,7 +101,7 @@ export default class GlobsUglifyJs {
             await this.deleteFile(file)
                 .catch(error => {
                     rejected = true;
-                    reject(error);
+                    reject(new RejectionError(error, "deleteFile"));
                 });
 
             if (!rejected) {
@@ -104,18 +123,39 @@ export default class GlobsUglifyJs {
         });
     }
 
+    private async uglifyFile(file: string) {
+        return new Promise<uglifyjs.MinifyOutput>((resolve, reject) => {
+            try {
+                let outputData = uglifyjs.minify(file);
+                resolve(outputData);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     private async recursiveUglify(filesList: Array<string>) {
         return new Promise<never>(async (resolve, reject) => {
             let file = filesList.shift();
             if (file != null) {
                 let rejected = false;
-                let outputData = uglifyjs.minify(file);
+                let outputData = await this.uglifyFile(file)
+                    .catch(error => {
+                        reject(new RejectionError(error, "uglifyFile"));
+                        rejected = true;
+                    }) as uglifyjs.MinifyOutput;
+
+                if (rejected) {
+                    return;
+                }
+
                 let outPath = this.resolveOutFilePath(file);
 
                 await this.ensureDirectoryExistence(outPath)
                     .catch(error => {
+                        console.log(error);
                         rejected = true;
-                        reject(error);
+                        reject(new RejectionError(error, "ensureDirectoryExistence"));
                     });
 
                 if (rejected) {
@@ -125,7 +165,7 @@ export default class GlobsUglifyJs {
                 await this.writeToFile(outPath, outputData.code)
                     .catch(error => {
                         rejected = true;
-                        reject(error);
+                        reject(new RejectionError(error, "writeToFile"));
                     });
 
                 if (rejected) {
@@ -135,13 +175,12 @@ export default class GlobsUglifyJs {
                 await this.recursiveUglify(filesList)
                     .catch(error => {
                         rejected = true;
-                        reject(error);
+                        reject(new RejectionError(error, "recursiveUglify"));
                     });
 
-                if (rejected) {
-                    return;
+                if (!rejected) {
+                    resolve();
                 }
-                resolve();
             } else {
                 resolve();
             }
@@ -150,13 +189,24 @@ export default class GlobsUglifyJs {
 
     private async ensureDirectoryExistence(filePath: string) {
         return new Promise<never>(async (resolve, reject) => {
+            let rejected = false;
             let dirname = path.dirname(filePath);
-            if (await this.directoryExists(dirname)) {
+            let directoryExist = await this.directoryExists(dirname);
+            if (directoryExist) {
                 resolve();
                 return;
             }
-            await this.ensureDirectoryExistence(dirname);
-            fs.mkdir(dirname, (error) => {
+            await this.ensureDirectoryExistence(dirname)
+                .catch(error => {
+                    reject(error);
+                    rejected = true;
+                });
+
+            if (rejected) {
+                return;
+            }
+
+            fs.mkdir(dirname, error => {
                 if (error) {
                     reject(error);
                 } else {
@@ -193,11 +243,11 @@ export default class GlobsUglifyJs {
                 for (let i = 0; i < files.length; i++) {
                     let file = files[i];
                     var fullPath = path.join(directoryPath, file);
-                    await this.deleteEmptyDirectories(fullPath).catch(error => {
-                        console.log("Error: ", error);
-                        reject(error);
-                        rejected = true;
-                    });
+                    await this.deleteEmptyDirectories(fullPath)
+                        .catch(error => {
+                            reject(new RejectionError(error, "deleteEmptyDirectories"));
+                            rejected = true;
+                        });
                     if (rejected) {
                         break;
                     }
@@ -216,7 +266,7 @@ export default class GlobsUglifyJs {
             if (files.length == 0) {
                 await this.removeDirectory(directoryPath)
                     .catch(error => {
-                        reject(error);
+                        reject(new RejectionError(error, "removeDirectory"));
                         rejected = true;
                     });
             }
