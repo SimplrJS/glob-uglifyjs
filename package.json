@@ -1,0 +1,41 @@
+{
+  "name": "glob-uglifyjs",
+  "version": "0.0.1",
+  "description": "Uglify files with glob pattern.",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p .",
+    "watch": "tsc -p . -w",
+    "test": "tsc -p . --noEmit"
+  },
+  "keywords": [
+    "uglify",
+    "minify",
+    "recursive",
+    "uglify-js",
+    "uglifyjs",
+    "mange",
+    "glob",
+    "folders"
+  ],
+  "author": "Giedrius Grabauskas<giedrius@quatrodev.com>",
+  "license": "GPL-3.0",
+  "files": [
+    "dist",
+    "**/*.md"
+  ],
+  "devDependencies": {
+    "@types/glob": "^5.0.30",
+    "@types/uglify-js": "^2.6.28",
+    "@types/yargs": "0.0.33",
+    "typescript": "^2.0.3"
+  },
+  "dependencies": {
+    "glob": "^7.1.1",
+    "uglify-js": "^2.7.3",
+    "yargs": "^6.0.0"
+  },
+  "bin": {
+    "glob-uglifyjs": "./dist/cli.js"
+  }
+}

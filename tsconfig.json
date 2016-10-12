@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es2015",
+        "noImplicitAny": true,
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "outDir": "dist",
+        "rootDir": "src",
+        "sourceMap": false,
+        "noUnusedLocals": true,
+        "noImplicitThis": true,
+        "noImplicitUseStrict": true,
+        "strictNullChecks": true,
+        "skipDefaultLibCheck": true,
+        "jsx": "react",
+        "typeRoots": [
+            "node_modules/@types"
+        ]
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "@types"
+    ]
+}
