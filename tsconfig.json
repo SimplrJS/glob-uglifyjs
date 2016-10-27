@@ -13,6 +13,7 @@
         "noImplicitUseStrict": true,
         "strictNullChecks": true,
         "skipDefaultLibCheck": true,
+        "declaration": true,
         "jsx": "react",
         "typeRoots": [
             "node_modules/@types"
