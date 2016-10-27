@@ -7,7 +7,8 @@ export default class GlobsUglifyJs {
     private deleteFiles(fileList);
     private deleteFile(filePath);
     private uglifyFile(file);
-    private recursiveUglify(filesList);
+    private startRecursiveUglify(filesList, results?);
+    private recursiveUglify(file);
     private ensureDirectoryExistence(filePath);
     private directoryExists(path);
     private deleteEmptyDirectories(directoryPath);

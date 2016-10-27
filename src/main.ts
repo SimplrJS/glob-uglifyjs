@@ -3,27 +3,36 @@ import * as glob from 'glob';
 import * as path from 'path';
 import OptionsConstructor, { Options } from './options';
 import * as fs from 'fs';
+import RejectionError from './rejection-error';
 
 const JS_EXTENSION = ".js";
 const MINIFY_EXTENSION_PREFIX = ".min";
 
 
-class RejectionError {
-    constructor(private error: NodeJS.ErrnoException | Error, private type: string | undefined) {
 
-    }
-    get Type() {
-        return this.type;
-    }
-    get Error() {
-        return this.error;
+class RecursiveUglifyResults {
+    private succeed = 0;
+    private failed = 0;
+
+    get Succeed() {
+        return this.succeed;
     }
 
-    ThrowError() {
-        console.log("Error type: ", this.type);
-        console.error(this.error);
+    get Failed() {
+        return this.failed;
     }
+
+    OnSucceed() {
+        this.succeed++;
+    }
+
+    OnFailed() {
+        this.failed++;
+    }
+
 }
+
+
 
 export default class GlobsUglifyJs {
 
@@ -42,7 +51,6 @@ export default class GlobsUglifyJs {
     }
 
     private async main() {
-        let rejected = false;
 
         let globOptions: glob.IOptions | undefined;
 
@@ -50,53 +58,36 @@ export default class GlobsUglifyJs {
             globOptions = { ignore: this.options.Exclue };
         }
 
-        let filesList = await this.getGlobs(this.globPattern, globOptions)
-            .catch(error => {
-                console.log(error);
-                rejected = true;
-            });
-        if (rejected) {
-            return;
-        }
+        try {
 
-        if (filesList.length === 0) {
-            console.log("No files found.");
-            return;
-        }
+            let filesList = await this.getGlobs(this.globPattern, globOptions);
 
-        await this.recursiveUglify(filesList.slice(0))
-            .catch((error: RejectionError) => {
+            if (filesList.length === 0) {
+                console.log("No files found.");
+                return;
+            }
+
+            let results = await this.startRecursiveUglify(filesList.slice(0));
+
+            if (this.options.RemoveSource) {
+                await this.deleteFiles(filesList.slice(0));
+                await this.deleteEmptyDirectories(this.options.RootDir);
+            }
+
+            if (results.Failed > 0) {
+                console.warn(`Failed to minify ${results.Failed} file${(results.Failed > 1) ? "s" : ""}.`);
+            }
+            if (results.Succeed > 0) {
+                console.log(`Successfully minified ${results.Succeed} file${(results.Succeed > 1) ? "s" : ""}.`);
+            }
+
+        } catch (error) {
+            if (error instanceof RejectionError) {
                 error.ThrowError();
-                rejected = true;
-            });
-
-        if (rejected) {
-            return;
-        }
-
-        if (this.options.RemoveSource) {
-            await this.deleteFiles(filesList.slice(0))
-                .catch((error: RejectionError) => {
-                    error.ThrowError();
-                    rejected = true;
-                });
-
-            if (rejected) {
-                return;
-            }
-
-            await this.deleteEmptyDirectories(this.options.RootDir)
-                .catch((error: RejectionError) => {
-                    error.ThrowError();
-                    rejected = true;
-                });
-
-            if (rejected) {
-                return;
+            } else {
+                throw error;
             }
         }
-
-        console.log(`Successfully minified ${filesList.length} files.`);
     }
 
     private async deleteFiles(fileList: Array<string>) {
@@ -145,55 +136,55 @@ export default class GlobsUglifyJs {
         });
     }
 
-    private async recursiveUglify(filesList: Array<string>) {
-        return new Promise<never>(async (resolve, reject) => {
+    private async startRecursiveUglify(filesList: Array<string>, results?: RecursiveUglifyResults) {
+        return new Promise<RecursiveUglifyResults>(async (resolve) => {
+            if (results == null) {
+                results = new RecursiveUglifyResults();
+            }
             let file = filesList.shift();
             if (file != null) {
-                let rejected = false;
+                try {
+                    await this.recursiveUglify(file);
+                    results.OnSucceed();
+                } catch (error) {
+                    if (error instanceof RejectionError) {
+                        error.LogError(this.options.Debug);
+                    } else if (this.options.Debug) {
+                        console.error(error);
+                    }
+                    results.OnFailed();
+                }
+                resolve(await this.startRecursiveUglify(filesList, results));
+            } else {
+                resolve(results);
+            }
+        });
+    }
+
+    private async recursiveUglify(file: string) {
+        return new Promise<never>(async (resolve, reject) => {
+            try {
                 let outputData = await this.uglifyFile(file)
                     .catch(error => {
-                        reject(new RejectionError(error, "uglifyFile"));
-                        rejected = true;
+                        throw new RejectionError(error, "uglifyFile", file);
                     }) as uglifyjs.MinifyOutput;
-
-                if (rejected) {
-                    return;
-                }
 
                 let outPath = this.resolveOutFilePath(file);
 
                 await this.ensureDirectoryExistence(outPath)
                     .catch(error => {
-                        console.log(error);
-                        rejected = true;
-                        reject(new RejectionError(error, "ensureDirectoryExistence"));
+                        throw new RejectionError(error, "ensureDirectoryExistence", file);
                     });
-
-                if (rejected) {
-                    return;
-                }
 
                 await this.writeToFile(outPath, outputData.code)
                     .catch(error => {
-                        rejected = true;
-                        reject(new RejectionError(error, "writeToFile"));
+                        throw new RejectionError(error, "writeToFile", file);
                     });
 
-                if (rejected) {
-                    return;
-                }
-
-                await this.recursiveUglify(filesList)
-                    .catch(error => {
-                        rejected = true;
-                        reject(error);
-                    });
-
-                if (!rejected) {
-                    resolve();
-                }
-            } else {
                 resolve();
+
+            } catch (error) {
+                reject(error);
             }
         });
     }
@@ -262,10 +253,6 @@ export default class GlobsUglifyJs {
                     if (rejected) {
                         break;
                     }
-                }
-
-                if (rejected) {
-                    return;
                 }
 
                 if (rejected) {

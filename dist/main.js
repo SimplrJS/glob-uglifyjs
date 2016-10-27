@@ -11,22 +11,25 @@ const glob = require('glob');
 const path = require('path');
 const options_1 = require('./options');
 const fs = require('fs');
+const rejection_error_1 = require('./rejection-error');
 const JS_EXTENSION = ".js";
 const MINIFY_EXTENSION_PREFIX = ".min";
-class RejectionError {
-    constructor(error, type) {
-        this.error = error;
-        this.type = type;
+class RecursiveUglifyResults {
+    constructor() {
+        this.succeed = 0;
+        this.failed = 0;
     }
-    get Type() {
-        return this.type;
+    get Succeed() {
+        return this.succeed;
     }
-    get Error() {
-        return this.error;
+    get Failed() {
+        return this.failed;
     }
-    ThrowError() {
-        console.log("Error type: ", this.type);
-        console.error(this.error);
+    OnSucceed() {
+        this.succeed++;
+    }
+    OnFailed() {
+        this.failed++;
     }
 }
 class GlobsUglifyJs {
@@ -40,50 +43,36 @@ class GlobsUglifyJs {
     }
     main() {
         return __awaiter(this, void 0, void 0, function* () {
-            let rejected = false;
             let globOptions;
             if (this.options.Exclue !== undefined) {
                 globOptions = { ignore: this.options.Exclue };
             }
-            let filesList = yield this.getGlobs(this.globPattern, globOptions)
-                .catch(error => {
-                console.log(error);
-                rejected = true;
-            });
-            if (rejected) {
-                return;
-            }
-            if (filesList.length === 0) {
-                console.log("No files found.");
-                return;
-            }
-            yield this.recursiveUglify(filesList.slice(0))
-                .catch((error) => {
-                error.ThrowError();
-                rejected = true;
-            });
-            if (rejected) {
-                return;
-            }
-            if (this.options.RemoveSource) {
-                yield this.deleteFiles(filesList.slice(0))
-                    .catch((error) => {
-                    error.ThrowError();
-                    rejected = true;
-                });
-                if (rejected) {
+            try {
+                let filesList = yield this.getGlobs(this.globPattern, globOptions);
+                if (filesList.length === 0) {
+                    console.log("No files found.");
                     return;
                 }
-                yield this.deleteEmptyDirectories(this.options.RootDir)
-                    .catch((error) => {
-                    error.ThrowError();
-                    rejected = true;
-                });
-                if (rejected) {
-                    return;
+                let results = yield this.startRecursiveUglify(filesList.slice(0));
+                if (this.options.RemoveSource) {
+                    yield this.deleteFiles(filesList.slice(0));
+                    yield this.deleteEmptyDirectories(this.options.RootDir);
+                }
+                if (results.Failed > 0) {
+                    console.warn(`Failed to minify ${results.Failed} file${(results.Failed > 1) ? "s" : ""}.`);
+                }
+                if (results.Succeed > 0) {
+                    console.log(`Successfully minified ${results.Succeed} file${(results.Succeed > 1) ? "s" : ""}.`);
                 }
             }
-            console.log(`Successfully minified ${filesList.length} files.`);
+            catch (error) {
+                if (error instanceof rejection_error_1.default) {
+                    error.ThrowError();
+                }
+                else {
+                    throw error;
+                }
+            }
         });
     }
     deleteFiles(fileList) {
@@ -98,7 +87,7 @@ class GlobsUglifyJs {
                 yield this.deleteFile(file)
                     .catch(error => {
                     rejected = true;
-                    reject(new RejectionError(error, "deleteFile"));
+                    reject(new rejection_error_1.default(error, "deleteFile"));
                 });
                 if (!rejected) {
                     yield this.deleteFiles(fileList);
@@ -134,49 +123,56 @@ class GlobsUglifyJs {
             });
         });
     }
-    recursiveUglify(filesList) {
+    startRecursiveUglify(filesList, results) {
         return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+                if (results == null) {
+                    results = new RecursiveUglifyResults();
+                }
                 let file = filesList.shift();
                 if (file != null) {
-                    let rejected = false;
+                    try {
+                        yield this.recursiveUglify(file);
+                        results.OnSucceed();
+                    }
+                    catch (error) {
+                        if (error instanceof rejection_error_1.default) {
+                            error.LogError(this.options.Debug);
+                        }
+                        else if (this.options.Debug) {
+                            console.error(error);
+                        }
+                        results.OnFailed();
+                    }
+                    resolve(yield this.startRecursiveUglify(filesList, results));
+                }
+                else {
+                    resolve(results);
+                }
+            }));
+        });
+    }
+    recursiveUglify(file) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                try {
                     let outputData = yield this.uglifyFile(file)
                         .catch(error => {
-                        reject(new RejectionError(error, "uglifyFile"));
-                        rejected = true;
+                        throw new rejection_error_1.default(error, "uglifyFile", file);
                     });
-                    if (rejected) {
-                        return;
-                    }
                     let outPath = this.resolveOutFilePath(file);
                     yield this.ensureDirectoryExistence(outPath)
                         .catch(error => {
-                        console.log(error);
-                        rejected = true;
-                        reject(new RejectionError(error, "ensureDirectoryExistence"));
+                        throw new rejection_error_1.default(error, "ensureDirectoryExistence", file);
                     });
-                    if (rejected) {
-                        return;
-                    }
                     yield this.writeToFile(outPath, outputData.code)
                         .catch(error => {
-                        rejected = true;
-                        reject(new RejectionError(error, "writeToFile"));
+                        throw new rejection_error_1.default(error, "writeToFile", file);
                     });
-                    if (rejected) {
-                        return;
-                    }
-                    yield this.recursiveUglify(filesList)
-                        .catch(error => {
-                        rejected = true;
-                        reject(error);
-                    });
-                    if (!rejected) {
-                        resolve();
-                    }
-                }
-                else {
                     resolve();
+                }
+                catch (error) {
+                    reject(error);
                 }
             }));
         });
@@ -240,7 +236,7 @@ class GlobsUglifyJs {
                         var fullPath = path.join(directoryPath, file);
                         yield this.deleteEmptyDirectories(fullPath)
                             .catch(error => {
-                            reject(new RejectionError(error, "deleteEmptyDirectories"));
+                            reject(new rejection_error_1.default(error, "deleteEmptyDirectories"));
                             rejected = true;
                         });
                         if (rejected) {
@@ -250,15 +246,12 @@ class GlobsUglifyJs {
                     if (rejected) {
                         return;
                     }
-                    if (rejected) {
-                        return;
-                    }
                     files = yield this.readFilesInDirectory(directoryPath);
                 }
                 if (files.length == 0) {
                     yield this.removeDirectory(directoryPath)
                         .catch(error => {
-                        reject(new RejectionError(error, "removeDirectory"));
+                        reject(new rejection_error_1.default(error, "removeDirectory"));
                         rejected = true;
                     });
                 }

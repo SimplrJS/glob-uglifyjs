@@ -1,6 +1,6 @@
 {
   "name": "glob-uglifyjs",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Uglify files with glob pattern.",
   "main": "dist/main.js",
   "scripts": {
@@ -28,7 +28,7 @@
     "@types/glob": "^5.0.30",
     "@types/uglify-js": "^2.6.28",
     "@types/yargs": "0.0.33",
-    "typescript": "^2.0.3"
+    "typescript": "^2.0.6"
   },
   "dependencies": {
     "glob": "^7.1.1",
