@@ -9,6 +9,7 @@ export interface Options {
     RootDir?: string;
     RemoveSource?: boolean;
     Debug?: boolean;
+    exclude?: Array<string>;
 }
 export default class OptionsConstructor implements Options {
     constructor(importData?: Options);
@@ -20,4 +21,5 @@ export default class OptionsConstructor implements Options {
     readonly RootDir: string;
     readonly RemoveSource: boolean;
     readonly Debug: boolean;
+    readonly Exclue: Array<string> | undefined;
 }

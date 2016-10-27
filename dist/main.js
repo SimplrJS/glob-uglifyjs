@@ -14,7 +14,7 @@ const fs = require('fs');
 const JS_EXTENSION = ".js";
 const MINIFY_EXTENSION_PREFIX = ".min";
 class RejectionError {
-    constructor(error, type = undefined) {
+    constructor(error, type) {
         this.error = error;
         this.type = type;
     }
@@ -23,6 +23,10 @@ class RejectionError {
     }
     get Error() {
         return this.error;
+    }
+    ThrowError() {
+        console.log("Error type: ", this.type);
+        console.error(this.error);
     }
 }
 class GlobsUglifyJs {
@@ -37,7 +41,11 @@ class GlobsUglifyJs {
     main() {
         return __awaiter(this, void 0, void 0, function* () {
             let rejected = false;
-            let filesList = yield this.getGlobs(this.globPattern)
+            let globOptions;
+            if (this.options.Exclue !== undefined) {
+                globOptions = { ignore: this.options.Exclue };
+            }
+            let filesList = yield this.getGlobs(this.globPattern, globOptions)
                 .catch(error => {
                 console.log(error);
                 rejected = true;
@@ -50,8 +58,8 @@ class GlobsUglifyJs {
                 return;
             }
             yield this.recursiveUglify(filesList.slice(0))
-                .catch(error => {
-                console.log(error);
+                .catch((error) => {
+                error.ThrowError();
                 rejected = true;
             });
             if (rejected) {
@@ -59,16 +67,16 @@ class GlobsUglifyJs {
             }
             if (this.options.RemoveSource) {
                 yield this.deleteFiles(filesList.slice(0))
-                    .catch(error => {
-                    console.log(error);
+                    .catch((error) => {
+                    error.ThrowError();
                     rejected = true;
                 });
                 if (rejected) {
                     return;
                 }
                 yield this.deleteEmptyDirectories(this.options.RootDir)
-                    .catch(error => {
-                    console.log(error);
+                    .catch((error) => {
+                    error.ThrowError();
                     rejected = true;
                 });
                 if (rejected) {
@@ -161,7 +169,7 @@ class GlobsUglifyJs {
                     yield this.recursiveUglify(filesList)
                         .catch(error => {
                         rejected = true;
-                        reject(new RejectionError(error, "recursiveUglify"));
+                        reject(error);
                     });
                     if (!rejected) {
                         resolve();

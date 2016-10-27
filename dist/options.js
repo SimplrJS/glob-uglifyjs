@@ -8,7 +8,8 @@ class OptionsConstructor {
             Cwd: undefined,
             RootDir: "",
             RemoveSource: false,
-            Debug: false
+            Debug: false,
+            exclude: undefined
         };
         if (importData != null) {
             if (importData.Cwd != null) {
@@ -45,6 +46,9 @@ class OptionsConstructor {
     }
     get Debug() {
         return this.options.Debug;
+    }
+    get Exclue() {
+        return this.options.exclude;
     }
 }
 Object.defineProperty(exports, "__esModule", { value: true });
