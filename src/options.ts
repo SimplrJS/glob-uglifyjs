@@ -10,6 +10,7 @@ export interface Options {
     RootDir?: string;
     RemoveSource?: boolean;
     Debug?: boolean;
+    exclude?: Array<string>;
 }
 
 export default class OptionsConstructor implements Options {
@@ -39,7 +40,8 @@ export default class OptionsConstructor implements Options {
         Cwd: undefined,
         RootDir: "",
         RemoveSource: false,
-        Debug: false
+        Debug: false,
+        exclude: undefined
     };
 
     public get UseMinExt(): boolean {
@@ -68,6 +70,10 @@ export default class OptionsConstructor implements Options {
 
     public get Debug(): boolean {
         return this.options.Debug!;
+    }
+
+    public get Exclue(): Array<string> | undefined {
+        return this.options.exclude;
     }
 
 }

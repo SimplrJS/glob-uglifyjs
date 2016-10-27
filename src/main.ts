@@ -9,7 +9,7 @@ const MINIFY_EXTENSION_PREFIX = ".min";
 
 
 class RejectionError {
-    constructor(private error: NodeJS.ErrnoException | Error, private type: string | undefined = undefined) {
+    constructor(private error: NodeJS.ErrnoException | Error, private type: string | undefined) {
 
     }
     get Type() {
@@ -17,6 +17,11 @@ class RejectionError {
     }
     get Error() {
         return this.error;
+    }
+
+    ThrowError() {
+        console.log("Error type: ", this.type);
+        console.error(this.error);
     }
 }
 
@@ -39,7 +44,13 @@ export default class GlobsUglifyJs {
     private async main() {
         let rejected = false;
 
-        let filesList = await this.getGlobs(this.globPattern)
+        let globOptions: glob.IOptions | undefined;
+
+        if (this.options.Exclue !== undefined) {
+            globOptions = { ignore: this.options.Exclue };
+        }
+
+        let filesList = await this.getGlobs(this.globPattern, globOptions)
             .catch(error => {
                 console.log(error);
                 rejected = true;
@@ -54,8 +65,8 @@ export default class GlobsUglifyJs {
         }
 
         await this.recursiveUglify(filesList.slice(0))
-            .catch(error => {
-                console.log(error);
+            .catch((error: RejectionError) => {
+                error.ThrowError();
                 rejected = true;
             });
 
@@ -65,8 +76,8 @@ export default class GlobsUglifyJs {
 
         if (this.options.RemoveSource) {
             await this.deleteFiles(filesList.slice(0))
-                .catch(error => {
-                    console.log(error);
+                .catch((error: RejectionError) => {
+                    error.ThrowError();
                     rejected = true;
                 });
 
@@ -75,8 +86,8 @@ export default class GlobsUglifyJs {
             }
 
             await this.deleteEmptyDirectories(this.options.RootDir)
-                .catch(error => {
-                    console.log(error);
+                .catch((error: RejectionError) => {
+                    error.ThrowError();
                     rejected = true;
                 });
 
@@ -175,7 +186,7 @@ export default class GlobsUglifyJs {
                 await this.recursiveUglify(filesList)
                     .catch(error => {
                         rejected = true;
-                        reject(new RejectionError(error, "recursiveUglify"));
+                        reject(error);
                     });
 
                 if (!rejected) {
