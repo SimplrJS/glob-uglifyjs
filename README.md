@@ -21,10 +21,10 @@ $ glob-uglifyjs -h
 
 | Argument                       | Type    | Default                     | Description                |
 |--------------------------------|---------|-----------------------------|----------------------------|
-|  -h, --help                    | boolean | false                       | Show help.                 | 
+|  -h, --help                    | boolean | `false`                     | Show help.                 | 
 |  -p, --pattern <sup>[1]</sup>  | string  |                             | Files glob pattern.        | 
-|  -v, --version                 | boolean | false                       | Show version number.       | 
-|  -c, --config                  | string  | 'glob-uglifyjs.config.json' | Path to JSON config file.  | 
+|  -v, --version                 | boolean | `false`                     | Show version number.       | 
+|  -c, --config                  | string  | `glob-uglifyjs.config.json` | Path to JSON config file.  | 
 
 <sup>[1]</sup> - argument required.
 
@@ -46,16 +46,16 @@ $ glob-uglifyjs -h
 
 
 ## Options
-| Option          | Type              | Default | Description                                                                        |
-|-----------------|-------------------|---------|------------------------------------------------------------------------------------|
-|  UseMinExt      | boolean           | true    | Use `min` extensions in output files.                                              | 
-|  MinifyOptions  | object            |         | UglifyJS minify options. [Read more](https://github.com/mishoo/UglifyJS2).         |
-|  OutDir         | string            |         | Redirect output structure to the directory.                                        |
-|  RootDir        | string            |         | Specifies the root directory of input files.                                       |
-|  RemoveSource   | boolean           | false   | Remove all source files specified by glob pattern.                                 |
-|  Debug          | boolean           | false   | Show errors details information.                                                   |
-|  exclude        | string | string[] |         | Add a pattern or an array of glob patterns to exclude matches. Read more in [node-glob options](https://github.com/isaacs/node-glob#options) `ignore`. |
-|  Cwd            | string            | `./`    | Current working directory.                                                         |
+| Option          | Type              | Default     | Description                                                                        |
+|-----------------|-------------------|-------------|------------------------------------------------------------------------------------|
+|  UseMinExt      | boolean           | `true`      | Use `min` extensions in output files.                                              | 
+|  MinifyOptions  | object            | `{}`        | UglifyJS minify options. [Read more](https://github.com/mishoo/UglifyJS2).         |
+|  OutDir         | string            | ``          | Redirect output structure to the directory.                                        |
+|  RootDir        | string            | ``          | Specifies the root directory of input files.                                       |
+|  RemoveSource   | boolean           | `false`     | Remove all source files specified by glob pattern.                                 |
+|  Debug          | boolean           | `false`     | Show errors details information.                                                   |
+|  exclude        | string | string[] | `undefined` | Add a pattern or an array of glob patterns to exclude matches. Read more in [node-glob options](https://github.com/isaacs/node-glob#options) `ignore`. |
+|  Cwd            | string            | `./`        | Current working directory.                                                         |
 
 
 ## License
