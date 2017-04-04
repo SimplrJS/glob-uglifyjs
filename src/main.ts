@@ -34,7 +34,7 @@ class RecursiveUglifyResults {
 
 
 
-export default class GlobsUglifyJs {
+export class GlobsUglifyJs {
 
     private globPattern: string;
 

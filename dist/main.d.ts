@@ -1,5 +1,5 @@
 import { Options } from "./options";
-export default class GlobsUglifyJs {
+export declare class GlobsUglifyJs {
     private globPattern;
     private options;
     constructor(globPattern: string, options?: Options);

@@ -394,4 +394,4 @@ class GlobsUglifyJs {
         return pattern + JS_EXTENSION;
     }
 }
-exports.default = GlobsUglifyJs;
+exports.GlobsUglifyJs = GlobsUglifyJs;
