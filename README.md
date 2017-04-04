@@ -5,11 +5,11 @@ Uglify JS files with glob pattern.
 
 ## Get started
 
-For use a command line:
+For use a command line global:
 ```sh
 $ npm install glob-uglifyjs -g
 ```
-For programmatic use:
+For use a command line locally:
 ```sh
 $ npm install glob-uglifyjs
 ```
@@ -20,6 +20,8 @@ $ npm install glob-uglifyjs
 
 
 ## Usage
+
+### Command line
 ```sh
 $ glob-uglifyjs -h
 ```
@@ -51,14 +53,16 @@ $ glob-uglifyjs -h
 
 
 ## Options
-| Option          | Type    | Default | Description                                                                |
-|-----------------|---------|---------|----------------------------------------------------------------------------|
-|  UseMinExt      | boolean | false   | Use `min` extensions in output files.                                      | 
-|  MinifyOptions  | object  |         | UglifyJS minify options. [Read more](https://github.com/mishoo/UglifyJS2). |
-|  OutDir         | string  | false   | Redirect output structure to the directory.                                |
-|  RootDir        | string  |         | Specifies the root directory of input files.                               |
-|  RemoveSource   | boolean | false   | Remove all source files specified by glob pattern.                         |
-|  Debug          | boolean | false   | Show errors details information.                                           |
+| Option          | Type    | Default | Description                                                                        |
+|-----------------|---------|---------|------------------------------------------------------------------------------------|
+|  UseMinExt      | boolean | true    | Use `min` extensions in output files.                                              | 
+|  MinifyOptions  | object  |         | UglifyJS minify options. [Read more](https://github.com/mishoo/UglifyJS2).         |
+|  OutDir         | string  |         | Redirect output structure to the directory.                                        |
+|  RootDir        | string  |         | Specifies the root directory of input files.                                       |
+|  RemoveSource   | boolean | false   | Remove all source files specified by glob pattern.                                 |
+|  Debug          | boolean | false   | Show errors details information.                                                   |
+|  exclude        | boolean |         | Ignore list from [node-glob options](https://github.com/isaacs/node-glob#options). |
+|  Cwd            | string  | `./`    | Current working directory.                                                         |
 
 
 ## License
