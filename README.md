@@ -46,16 +46,16 @@ $ glob-uglifyjs -h
 
 
 ## Options
-| Option          | Type     | Default | Description                                                                        |
-|-----------------|----------|---------|------------------------------------------------------------------------------------|
-|  UseMinExt      | boolean  | true    | Use `min` extensions in output files.                                              | 
-|  MinifyOptions  | object   |         | UglifyJS minify options. [Read more](https://github.com/mishoo/UglifyJS2).         |
-|  OutDir         | string   |         | Redirect output structure to the directory.                                        |
-|  RootDir        | string   |         | Specifies the root directory of input files.                                       |
-|  RemoveSource   | boolean  | false   | Remove all source files specified by glob pattern.                                 |
-|  Debug          | boolean  | false   | Show errors details information.                                                   |
-|  exclude        | string[] |         | Add a pattern or an array of glob patterns to exclude matches. Read more in [node-glob options](https://github.com/isaacs/node-glob#options) `ignore`. |
-|  Cwd            | string   | `./`    | Current working directory.                                                         |
+| Option          | Type              | Default | Description                                                                        |
+|-----------------|-------------------|---------|------------------------------------------------------------------------------------|
+|  UseMinExt      | boolean           | true    | Use `min` extensions in output files.                                              | 
+|  MinifyOptions  | object            |         | UglifyJS minify options. [Read more](https://github.com/mishoo/UglifyJS2).         |
+|  OutDir         | string            |         | Redirect output structure to the directory.                                        |
+|  RootDir        | string            |         | Specifies the root directory of input files.                                       |
+|  RemoveSource   | boolean           | false   | Remove all source files specified by glob pattern.                                 |
+|  Debug          | boolean           | false   | Show errors details information.                                                   |
+|  exclude        | string | string[] |         | Add a pattern or an array of glob patterns to exclude matches. Read more in [node-glob options](https://github.com/isaacs/node-glob#options) `ignore`. |
+|  Cwd            | string            | `./`    | Current working directory.                                                         |
 
 
 ## License
