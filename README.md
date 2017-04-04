@@ -51,14 +51,14 @@ $ glob-uglifyjs -h
 
 
 ## Options
-| Option                         | Type    | Default                     | Description                                                                |
-|--------------------------------|---------|-----------------------------|----------------------------------------------------------------------------|
-|  UseMinExt                     | boolean | false                       | Use `min` extensions in output files.                                      | 
-|  MinifyOptions                 | object  |                             | UglifyJS minify options. [Read more](https://github.com/mishoo/UglifyJS2). |
-|  OutDir                        | string  | false                       | Redirect output structure to the directory.                                |
-|  RootDir                       | string  |                             | Specifies the root directory of input files.                               |
-|  RemoveSource                  | boolean | false                       | Remove all source files specified by glob pattern.                         |
-|  Debug                         | boolean | false                       | Show debug information.                                                    |
+| Option          | Type    | Default | Description                                                                |
+|-----------------|---------|---------|----------------------------------------------------------------------------|
+|  UseMinExt      | boolean | false   | Use `min` extensions in output files.                                      | 
+|  MinifyOptions  | object  |         | UglifyJS minify options. [Read more](https://github.com/mishoo/UglifyJS2). |
+|  OutDir         | string  | false   | Redirect output structure to the directory.                                |
+|  RootDir        | string  |         | Specifies the root directory of input files.                               |
+|  RemoveSource   | boolean | false   | Remove all source files specified by glob pattern.                         |
+|  Debug          | boolean | false   | Show errors details information.                                           |
 
 
 ## License
