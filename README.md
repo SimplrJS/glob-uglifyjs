@@ -72,4 +72,4 @@ $ glob-uglifyjs -h
 
 
 ## License
-Released under the [AGPL-3.0 license](LICENSE).
+Released under the [MIT license](LICENSE).

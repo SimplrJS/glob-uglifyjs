@@ -26,7 +26,7 @@
   "bugs": "https://github.com/SimplrJS/glob-uglifyjs/issues",
   "repository": "SimplrJS/glob-uglifyjs",
   "homepage": "https://github.com/SimplrJS/glob-uglifyjs",
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "engines": {
     "node": ">=6.0.0"
   },
