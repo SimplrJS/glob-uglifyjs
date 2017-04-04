@@ -25,11 +25,11 @@ $ glob-uglifyjs -h
 | Argument                       | Type    | Default                     | Description                |
 |--------------------------------|---------|-----------------------------|----------------------------|
 |  -h, --help                    | boolean | `false`                     | Show help.                 | 
-|  -p, --pattern <sup>[1]</sup>  | string  |                             | Files glob pattern.        | 
+|  -p, --pattern <sup>[*]</sup>  | string  |                             | Files glob pattern.        | 
 |  -v, --version                 | boolean | `false`                     | Show version number.       | 
 |  -c, --config                  | string  | `glob-uglifyjs.config.json` | Path to JSON config file.  | 
 
-<sup>[1]</sup> - argument required.
+<sup>[*]</sup> - argument required.
 
 
 ## Config
