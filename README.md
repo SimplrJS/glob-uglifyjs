@@ -11,7 +11,7 @@ $ npm install glob-uglifyjs
 
 ## Features
  - Uglify `js` files with [node-glob](https://github.com/isaacs/node-glob) pattern.
- - Remove source files (`js`) after uglify.
+ - Remove source files after uglify.
 
 
 ### Command line
