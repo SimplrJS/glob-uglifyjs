@@ -1,9 +1,9 @@
-import * as uglifyjs from 'uglify-js';
-import * as glob from 'glob';
-import * as path from 'path';
-import OptionsConstructor, { Options } from './options';
-import * as fs from 'fs';
-import RejectionError from './rejection-error';
+import * as uglifyjs from "uglify-js";
+import * as glob from "glob";
+import * as path from "path";
+import OptionsConstructor, { Options } from "./options";
+import * as fs from "fs";
+import RejectionError from "./rejection-error";
 
 const JS_EXTENSION = ".js";
 const MINIFY_EXTENSION_PREFIX = ".min";
@@ -125,10 +125,10 @@ export default class GlobsUglifyJs {
         });
     }
 
-    private async uglifyFile(file: string) {
+    private async uglifyFile(file: string, options?: uglifyjs.MinifyOptions) {
         return new Promise<uglifyjs.MinifyOutput>((resolve, reject) => {
             try {
-                let outputData = uglifyjs.minify(file);
+                let outputData = uglifyjs.minify(file, options);
                 resolve(outputData);
             } catch (error) {
                 reject(error);
@@ -164,7 +164,7 @@ export default class GlobsUglifyJs {
     private async recursiveUglify(file: string) {
         return new Promise<never>(async (resolve, reject) => {
             try {
-                let outputData = await this.uglifyFile(file)
+                let outputData = await this.uglifyFile(file, this.options.MinifyOptions)
                     .catch(error => {
                         throw new RejectionError(error, "uglifyFile", file);
                     }) as uglifyjs.MinifyOutput;
@@ -261,7 +261,7 @@ export default class GlobsUglifyJs {
                 files = await this.readFilesInDirectory(directoryPath);
             }
 
-            if (files.length == 0) {
+            if (files.length === 0) {
                 await this.removeDirectory(directoryPath)
                     .catch(error => {
                         reject(new RejectionError(error, "removeDirectory"));
@@ -334,11 +334,11 @@ export default class GlobsUglifyJs {
     }
 
     /**
-     * Asynchronously write data to file with flag 'wx'.
+     * Asynchronously write data to file with flag "wx".
      * 
      * @private
      * @param {string} filePath File path.
-     * @param {string} data Data in 'utf-8'.
+     * @param {string} data Data in "utf-8".
      * @returns
      * 
      * @memberOf GlobsUglifyJs

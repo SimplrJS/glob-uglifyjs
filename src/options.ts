@@ -1,5 +1,5 @@
-import * as uglifyjs from 'uglify-js';
-import * as process from 'process';
+import * as uglifyjs from "uglify-js";
+import * as process from "process";
 
 export interface Options {
     [key: string]: any;
