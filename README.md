@@ -53,10 +53,10 @@ $ glob-uglifyjs -h
 
 | Property                | Type                | Description            |
 |-------------------------|---------------------|------------------------|
-|  pattern<sup>[1]</sup>  | string              | Files glob pattern.    |
+|  pattern<sup>[*]</sup>  | string              | Files glob pattern.    |
 |  options                | [Options](#options) | glob-uglifyjs options. |
 
-<sup>[1]</sup> - property required.
+<sup>[*]</sup> - property required.
 
 ### Options
 | Option          | Type               | Default         | Description                                                                        |
@@ -72,4 +72,4 @@ $ glob-uglifyjs -h
 
 
 ## License
-Released under the [PGL-3.0 license](LICENSE).
+Released under the [AGPL-3.0 license](LICENSE).
