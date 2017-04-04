@@ -1,3 +1,4 @@
+Object.defineProperty(exports, "__esModule", { value: true });
 class RejectionError {
     constructor(error, type, uniqId) {
         this.error = error;
@@ -34,5 +35,4 @@ class RejectionError {
         throw this.error;
     }
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = RejectionError;

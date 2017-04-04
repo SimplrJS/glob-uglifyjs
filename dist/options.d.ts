@@ -1,5 +1,5 @@
 /// <reference types="uglify-js" />
-import * as uglifyjs from 'uglify-js';
+import * as uglifyjs from "uglify-js";
 export interface Options {
     [key: string]: any;
     UseMinExt?: boolean;

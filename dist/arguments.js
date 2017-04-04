@@ -1,20 +1,24 @@
-const yargs = require('yargs');
 Object.defineProperty(exports, "__esModule", { value: true });
+const yargs = require("yargs");
+function GetVersion() {
+    let packageJson = require("../package.json");
+    return packageJson.version || "";
+}
 exports.default = yargs
-    .help('h', 'Show help')
-    .alias('h', 'help')
+    .help("h", "Show help")
+    .alias("h", "help")
     .version(() => {
-    return `Current version: ${require('../package.json').version}`;
+    return `Current version: ${GetVersion()}`;
 })
-    .alias('v', 'version')
+    .alias("v", "version")
     .option("p", {
     alias: "pattern",
     describe: "Files glob pattern",
     type: "string"
 })
     .require("pattern", "Pattern required")
-    .config('config')
-    .alias('c', 'config')
-    .default('config', 'glob-uglifyjs.config.json')
-    .usage('Usage: glob-uglifyjs [options]')
+    .config("config")
+    .alias("c", "config")
+    .default("config", "glob-uglifyjs.config.json")
+    .usage("Usage: glob-uglifyjs [options]")
     .argv;

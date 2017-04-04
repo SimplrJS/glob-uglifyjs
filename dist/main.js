@@ -1,17 +1,18 @@
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator.throw(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
         function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments)).next());
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const uglifyjs = require('uglify-js');
-const glob = require('glob');
-const path = require('path');
-const options_1 = require('./options');
-const fs = require('fs');
-const rejection_error_1 = require('./rejection-error');
+Object.defineProperty(exports, "__esModule", { value: true });
+const uglifyjs = require("uglify-js");
+const glob = require("glob");
+const path = require("path");
+const options_1 = require("./options");
+const fs = require("fs");
+const rejection_error_1 = require("./rejection-error");
 const JS_EXTENSION = ".js";
 const MINIFY_EXTENSION_PREFIX = ".min";
 class RecursiveUglifyResults {
@@ -110,11 +111,11 @@ class GlobsUglifyJs {
             });
         });
     }
-    uglifyFile(file) {
+    uglifyFile(file, options) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
                 try {
-                    let outputData = uglifyjs.minify(file);
+                    let outputData = uglifyjs.minify(file, options);
                     resolve(outputData);
                 }
                 catch (error) {
@@ -156,7 +157,7 @@ class GlobsUglifyJs {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 try {
-                    let outputData = yield this.uglifyFile(file)
+                    let outputData = yield this.uglifyFile(file, this.options.MinifyOptions)
                         .catch(error => {
                         throw new rejection_error_1.default(error, "uglifyFile", file);
                     });
@@ -248,7 +249,7 @@ class GlobsUglifyJs {
                     }
                     files = yield this.readFilesInDirectory(directoryPath);
                 }
-                if (files.length == 0) {
+                if (files.length === 0) {
                     yield this.removeDirectory(directoryPath)
                         .catch(error => {
                         reject(new rejection_error_1.default(error, "removeDirectory"));
@@ -317,11 +318,11 @@ class GlobsUglifyJs {
         });
     }
     /**
-     * Asynchronously write data to file with flag 'wx'.
+     * Asynchronously write data to file with flag "wx".
      *
      * @private
      * @param {string} filePath File path.
-     * @param {string} data Data in 'utf-8'.
+     * @param {string} data Data in "utf-8".
      * @returns
      *
      * @memberOf GlobsUglifyJs
@@ -393,5 +394,4 @@ class GlobsUglifyJs {
         return pattern + JS_EXTENSION;
     }
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = GlobsUglifyJs;

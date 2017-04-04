@@ -1,4 +1,5 @@
-const process = require('process');
+Object.defineProperty(exports, "__esModule", { value: true });
+const process = require("process");
 class OptionsConstructor {
     constructor(importData) {
         this.options = {
@@ -51,5 +52,4 @@ class OptionsConstructor {
         return this.options.exclude;
     }
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = OptionsConstructor;
