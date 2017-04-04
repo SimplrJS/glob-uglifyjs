@@ -14,11 +14,14 @@ $ npm install glob-uglifyjs
  - Remove source files after uglify.
 
 
-### Command line
+## Command line
+
+### Usage
 ```sh
 $ glob-uglifyjs -h
 ```
 
+### Arguments
 | Argument                       | Type    | Default                     | Description                |
 |--------------------------------|---------|-----------------------------|----------------------------|
 |  -h, --help                    | boolean | `false`                     | Show help.                 | 
@@ -27,6 +30,7 @@ $ glob-uglifyjs -h
 |  -c, --config                  | string  | `glob-uglifyjs.config.json` | Path to JSON config file.  | 
 
 <sup>[1]</sup> - argument required.
+
 
 ## Config
 
@@ -47,11 +51,12 @@ $ glob-uglifyjs -h
 
 ### Properties
 
-| Property  | Type                | Description            |
-|-----------|---------------------|------------------------|
-|  pattern  | string              | Files glob pattern.    |
-|  options  | [Options](#options) | glob-uglifyjs options. |
+| Property                | Type                | Description            |
+|-------------------------|---------------------|------------------------|
+|  pattern<sup>[1]</sup>  | string              | Files glob pattern.    |
+|  options                | [Options](#options) | glob-uglifyjs options. |
 
+<sup>[1]</sup> - property required.
 
 ### Options
 | Option          | Type               | Default         | Description                                                                        |
