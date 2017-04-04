@@ -1,5 +1,5 @@
-import * as uglifyjs from 'uglify-js';
-import * as process from 'process';
+import * as uglifyjs from "uglify-js";
+import * as process from "process";
 
 export interface Options {
     [key: string]: any;
@@ -10,7 +10,7 @@ export interface Options {
     RootDir?: string;
     RemoveSource?: boolean;
     Debug?: boolean;
-    exclude?: Array<string>;
+    exclude?: Array<string> | string;
 }
 
 export default class OptionsConstructor implements Options {
@@ -72,7 +72,7 @@ export default class OptionsConstructor implements Options {
         return this.options.Debug!;
     }
 
-    public get Exclue(): Array<string> | undefined {
+    public get Exclue(): Array<string> | string | undefined {
         return this.options.exclude;
     }
 

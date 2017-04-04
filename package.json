@@ -1,7 +1,7 @@
 {
   "name": "glob-uglifyjs",
-  "version": "0.2.0",
-  "description": "Uglify files with glob pattern.",
+  "version": "0.3.0",
+  "description": "Uglify JS files with glob pattern.",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc -p .",
@@ -18,22 +18,28 @@
     "glob",
     "folders"
   ],
-  "author": "Giedrius Grabauskas<giedrius@quatrodev.com>",
-  "license": "GPL-3.0",
   "files": [
     "dist",
     "**/*.md"
   ],
+  "author": "Giedrius Grabauskas <giedrius@quatrodev.com>  (https://github.com/GiedriusGrabauskas)",
+  "bugs": "https://github.com/SimplrJS/glob-uglifyjs/issues",
+  "repository": "SimplrJS/glob-uglifyjs",
+  "homepage": "https://github.com/SimplrJS/glob-uglifyjs",
+  "license": "GPL-3.0",
+  "engines": {
+    "node": ">=6.0.0"
+  },
   "devDependencies": {
     "@types/glob": "^5.0.30",
     "@types/uglify-js": "^2.6.28",
-    "@types/yargs": "0.0.33",
-    "typescript": "^2.0.6"
+    "@types/yargs": "6.6.0",
+    "typescript": "^2.2.2"
   },
   "dependencies": {
     "glob": "^7.1.1",
-    "uglify-js": "^2.7.3",
-    "yargs": "^6.0.0"
+    "uglify-js": "^2.8.21",
+    "yargs": "^7.0.2"
   },
   "bin": {
     "glob-uglifyjs": "./dist/cli.js"
