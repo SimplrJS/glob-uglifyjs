@@ -3,23 +3,16 @@ glob-uglifyjs
 Uglify JS files with glob pattern.
 
 
-## Get started
-
-For use a command line global:
-```sh
-$ npm install glob-uglifyjs -g
-```
-For use a command line locally:
+## Installation
 ```sh
 $ npm install glob-uglifyjs
 ```
+
 
 ## Features
  - Uglify `js` files with [node-glob](https://github.com/isaacs/node-glob) pattern.
  - Remove source files (`js`) after uglify.
 
-
-## Usage
 
 ### Command line
 ```sh
