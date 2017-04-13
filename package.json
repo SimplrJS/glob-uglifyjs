@@ -3,6 +3,7 @@
   "version": "0.4.0",
   "description": "Uglify JS files with glob pattern.",
   "main": "dist/main.js",
+  "types": "dist/main.d.ts",
   "scripts": {
     "build": "tsc -p .",
     "watch": "tsc -p . -w",
