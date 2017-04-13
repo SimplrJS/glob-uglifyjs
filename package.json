@@ -32,15 +32,15 @@
     "node": ">=6.0.0"
   },
   "devDependencies": {
-    "@types/glob": "^5.0.30",
-    "@types/uglify-js": "^2.6.28",
-    "@types/yargs": "6.6.0",
     "typescript": "^2.2.2"
   },
   "dependencies": {
     "glob": "^7.1.1",
     "uglify-js": "^2.8.21",
-    "yargs": "^7.0.2"
+    "yargs": "^7.0.2",
+    "@types/glob": "^5.0.30",
+    "@types/uglify-js": "^2.6.28",
+    "@types/yargs": "6.6.0"
   },
   "bin": {
     "glob-uglifyjs": "./dist/cli.js"
