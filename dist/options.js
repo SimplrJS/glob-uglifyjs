@@ -48,7 +48,7 @@ class OptionsConstructor {
     get Debug() {
         return this.options.Debug;
     }
-    get Exclue() {
+    get Exclude() {
         return this.options.exclude;
     }
 }

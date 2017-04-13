@@ -45,8 +45,8 @@ class GlobsUglifyJs {
     main() {
         return __awaiter(this, void 0, void 0, function* () {
             let globOptions;
-            if (this.options.Exclue !== undefined) {
-                globOptions = { ignore: this.options.Exclue };
+            if (this.options.Exclude !== undefined) {
+                globOptions = { ignore: this.options.Exclude };
             }
             try {
                 let filesList = yield this.getGlobs(this.globPattern, globOptions);

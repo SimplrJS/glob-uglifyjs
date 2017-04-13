@@ -21,5 +21,5 @@ export default class OptionsConstructor implements Options {
     readonly RootDir: string;
     readonly RemoveSource: boolean;
     readonly Debug: boolean;
-    readonly Exclue: Array<string> | string | undefined;
+    readonly Exclude: Array<string> | string | undefined;
 }
