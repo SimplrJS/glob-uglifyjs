@@ -72,7 +72,7 @@ export default class OptionsConstructor implements Options {
         return this.options.Debug!;
     }
 
-    public get Exclue(): Array<string> | string | undefined {
+    public get Exclude(): Array<string> | string | undefined {
         return this.options.exclude;
     }
 

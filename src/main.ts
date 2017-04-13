@@ -54,8 +54,8 @@ export class GlobsUglifyJs {
 
         let globOptions: glob.IOptions | undefined;
 
-        if (this.options.Exclue !== undefined) {
-            globOptions = { ignore: this.options.Exclue };
+        if (this.options.Exclude !== undefined) {
+            globOptions = { ignore: this.options.Exclude };
         }
 
         try {
