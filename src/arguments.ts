@@ -1,9 +1,9 @@
 import * as yargs from "yargs";
-import { Options } from "./options";
+import { OptionsDto } from "./options";
 
 export interface Arguments {
     pattern: string;
-    options: Options;
+    options: OptionsDto;
 }
 
 

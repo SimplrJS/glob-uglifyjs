@@ -1,6 +1,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const process = require("process");
-class OptionsConstructor {
+class Options {
     constructor(importData) {
         this.options = {
             MinifyOptions: {},
@@ -52,4 +52,4 @@ class OptionsConstructor {
         return this.options.exclude;
     }
 }
-exports.default = OptionsConstructor;
+exports.Options = Options;

@@ -1,7 +1,7 @@
-import { Options } from "./options";
+import { OptionsDto } from "./options";
 export interface Arguments {
     pattern: string;
-    options: Options;
+    options: OptionsDto;
 }
 declare var _default: Arguments;
 export default _default;
