@@ -2,7 +2,7 @@ import * as uglifyjs from "uglify-js";
 import * as glob from "glob";
 import * as path from "path";
 import { Options, OptionsDto } from "./options";
-import * as fs from "fs-promise";
+import * as fs from "mz/fs";
 import { RejectionError } from "./rejection-error";
 
 import * as Directories from "./utils/directories";
@@ -26,8 +26,8 @@ export class GlobsUglifyJs {
             globPattern += JS_EXTENSION;
         } else if (globExt === ".") {
             globPattern += JS_EXTENSION.slice(1);
-        } else {
-            console.log("Using custom extension: ", globExt);
+        } else if (!this.options.Silence) {
+            console.log(`Using custom '${globExt}' extension.`);
         }
 
         if (this.options.Exclude !== undefined) {
@@ -47,6 +47,8 @@ export class GlobsUglifyJs {
 
     private filesDetails: Array<{ Index: number; Status: Status }> | undefined;
 
+    private uglified: boolean = false;
+
     public async GetFilesList(): Promise<string[]> {
         if (this.filesList != null) {
             return this.filesList;
@@ -55,12 +57,14 @@ export class GlobsUglifyJs {
         try {
             filesList = await this.getGlobFilesList(this.globPattern, this.globOptions);
         } catch (error) {
-            if (this.options.Debug) {
+            if (this.options.Debug && !this.options.Silence) {
                 console.error(error);
             }
-            throw new Error(`Failed to find files by specified glob (${this.globPattern}).`);
+            throw new Error(`Failed to find files by specified glob '${this.globPattern}'.`);
         }
-        console.log(`Found ${filesList.length} files with glob pattern ${this.globPattern}`);
+        if (!this.options.Silence) {
+            console.log(`Found ${filesList.length} files with glob pattern '${this.globPattern}'.`);
+        }
         this.filesList = filesList;
         this.filesDetails = this.filesList.map((value, index) => {
             return { Index: index, Status: Status.Init };
@@ -68,7 +72,11 @@ export class GlobsUglifyJs {
         return this.filesList;
     }
 
-    public async Uglify(porcessLimit: number = 3): Promise<void> {
+    public async Uglify(processLimit: number = 3): Promise<void> {
+        if (this.uglified && !this.options.Silence) {
+            console.warn("Files already uglified.");
+            return;
+        }
         let filesList: string[];
         if (this.filesList == null) {
             filesList = await this.GetFilesList();
@@ -76,28 +84,17 @@ export class GlobsUglifyJs {
             filesList = this.filesList;
         }
 
-        const filesCount = filesList.length;
-
-        if (filesCount === 0) {
+        if (filesList.length === 0 && !this.options.Silence) {
             console.warn(`No files found matching specified glob pattern (${this.globPattern}).`);
             return;
         }
 
-        const results = {
-            Success: new Array<string>(),
-            Failed: new Array<string>()
-        };
+        await this.handleStarter(processLimit);
 
-        for (let i = 0; i < filesCount; i++) {
-            const file = filesList[i];
-            try {
-                await this.uglifyItem(file);
-                results.Success.push(file);
-            } catch (error) {
-                results.Failed.push(file);
-                this.handleError(error);
-            }
-        }
+        const results = {
+            Success: this.filesDetails!.filter(x => x.Status === Status.Completed).map(x => filesList[x.Index]),
+            Failed: this.filesDetails!.filter(x => x.Status === Status.Failed).map(x => filesList[x.Index])
+        };
 
         if (this.options.RemoveSource) {
             try {
@@ -107,19 +104,100 @@ export class GlobsUglifyJs {
             }
         }
 
-        if (results.Failed.length > 0) {
-            console.warn(`Failed to minify ${results.Failed.length} file${(results.Failed.length > 1) ? "s" : ""}.`);
-        }
-        if (results.Success.length > 0) {
-            console.log(`Successfully minified ${results.Success.length} file${(results.Success.length > 1) ? "s" : ""}.`);
+        if (!this.options.Silence) {
+            if (results.Failed.length > 0) {
+                console.warn(`Failed to minify ${results.Failed.length} file${(results.Failed.length > 1) ? "s" : ""}.`);
+            }
+            if (results.Success.length > 0) {
+                console.log(`Successfully minified ${results.Success.length} file${(results.Success.length > 1) ? "s" : ""}.`);
+            }
         }
     }
 
+    private handlerInfo: {
+        Resolve: () => void;
+        Reject: () => void;
+        ProcessLimit: number;
+        ActiveProcess: number;
+    };
+
+    private handleStarter(processLimit: number) {
+        return new Promise<void>((resolve, reject) => {
+            this.handlerInfo = {
+                Reject: reject,
+                Resolve: resolve,
+                ProcessLimit: processLimit,
+                ActiveProcess: 0
+            };
+            this.tryToStartHandle();
+        });
+    }
+
+    private tryToStartHandle() {
+        if (this.handlerInfo.ActiveProcess >= this.handlerInfo.ProcessLimit) {
+            return;
+        }
+
+        if (this.filesDetails == null) {
+            return;
+        }
+
+        const index = this.filesDetails.findIndex(x => x.Status === Status.Init);
+        if (index === -1) {
+            return;
+        }
+
+        this.handlerInfo.ActiveProcess++;
+        this.startHandlingFile(index);
+        this.tryToStartHandle();
+    }
+
+    private onFileHandled() {
+        this.handlerInfo.ActiveProcess--;
+        if (this.filesDetails == null) {
+            return;
+        }
+        const completedList = this.filesDetails.filter(x => x.Status === Status.Completed || x.Status === Status.Failed);
+        if (completedList.length !== this.filesDetails.length) {
+            this.tryToStartHandle();
+            return;
+        }
+        this.uglified = true;
+        this.handlerInfo.Resolve();
+    }
+
+    private async startHandlingFile(index: number) {
+        if (this.filesDetails == null || this.filesList == null) {
+            this.onFileHandled();
+            return;
+        }
+
+        const file = this.filesList[this.filesDetails[index].Index];
+        if (file == null) {
+            this.onFileHandled();
+            return;
+        }
+
+        try {
+            this.filesDetails[index].Status = Status.Pending;
+            await this.uglifyItem(file);
+            this.filesDetails[index].Status = Status.Completed;
+        } catch (error) {
+            this.filesDetails[index].Status = Status.Failed;
+            this.handleError(error);
+        }
+
+        this.onFileHandled();
+    }
+
+
     private handleError(error: any) {
-        if (error instanceof RejectionError) {
-            error.LogError(this.options.Debug);
-        } else if (this.options.Debug) {
-            console.error(error);
+        if (!this.options.Silence) {
+            if (error instanceof RejectionError) {
+                error.LogError(this.options.Debug);
+            } else if (this.options.Debug && !this.options.Silence) {
+                console.error(error);
+            }
         }
     }
 

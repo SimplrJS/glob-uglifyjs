@@ -10,7 +10,8 @@ class Options {
             RootDir: "",
             RemoveSource: false,
             Debug: false,
-            exclude: undefined
+            Exclude: undefined,
+            Silence: false
         };
         if (importData != null) {
             if (importData.Cwd != null) {
@@ -22,10 +23,19 @@ class Options {
             this.options.Cwd = process.cwd();
             Object.keys(this.options).forEach(key => {
                 if (importData[key] !== undefined) {
-                    this.options[key] = importData[key];
+                    // Deprecated: now use Exclude key.
+                    if (key === "exclude") {
+                        this.options["Exclude"] = importData[key];
+                    }
+                    else {
+                        this.options[key] = importData[key];
+                    }
                 }
             });
         }
+    }
+    ToObject() {
+        return this.options;
     }
     get UseMinExt() {
         return this.options.UseMinExt;
@@ -49,7 +59,10 @@ class Options {
         return this.options.Debug;
     }
     get Exclude() {
-        return this.options.exclude;
+        return this.options.Exclude;
+    }
+    get Silence() {
+        return this.options.Silence;
     }
 }
 exports.Options = Options;

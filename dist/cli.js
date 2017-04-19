@@ -10,15 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const arguments_1 = require("./arguments");
 const main_1 = require("./main");
-const process = require("process");
-console.log(process.cwd());
 function CliStarter() {
     return __awaiter(this, void 0, void 0, function* () {
-        // const start = process.hrtime();
         const globUglifier = new main_1.GlobsUglifyJs(arguments_1.default.pattern, arguments_1.default.options || {});
-        yield globUglifier.Uglify();
-        // const [sec, nano] = process.hrtime(start);
-        // console.log(`TIME: ${(sec * 1e9 + nano) / 1e9}`);
+        yield globUglifier.Uglify(5);
     });
 }
 CliStarter();

@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
-const fs = require("fs-promise");
+const fs = require("mz/fs");
 const mkdirp = require("mkdirp");
 function Exists(path) {
     return __awaiter(this, void 0, void 0, function* () {

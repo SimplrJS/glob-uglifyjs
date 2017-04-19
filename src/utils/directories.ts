@@ -1,5 +1,5 @@
 import * as path from "path";
-import * as fs from "fs-promise";
+import * as fs from "mz/fs";
 import * as mkdirp from "mkdirp";
 
 export async function Exists(path: string) {

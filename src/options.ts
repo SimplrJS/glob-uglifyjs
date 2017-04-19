@@ -10,8 +10,10 @@ export interface OptionsDto {
     RootDir?: string;
     RemoveSource?: boolean;
     Debug?: boolean;
-    exclude?: Array<string> | string;
+    Exclude?: Array<string> | string;
+    Silence?: boolean;
 }
+
 
 export class Options implements OptionsDto {
 
@@ -27,7 +29,12 @@ export class Options implements OptionsDto {
 
             Object.keys(this.options).forEach(key => {
                 if (importData[key] !== undefined) {
-                    this.options[key] = importData[key];
+                    // Deprecated: now use Exclude key.
+                    if (key === "exclude") {
+                        this.options["Exclude"] = importData[key];
+                    } else {
+                        this.options[key] = importData[key];
+                    }
                 }
             });
         }
@@ -41,8 +48,13 @@ export class Options implements OptionsDto {
         RootDir: "",
         RemoveSource: false,
         Debug: false,
-        exclude: undefined
+        Exclude: undefined,
+        Silence: false
     };
+
+    public ToObject(): OptionsDto {
+        return this.options;
+    }
 
     public get UseMinExt(): boolean {
         return this.options.UseMinExt!;
@@ -73,7 +85,11 @@ export class Options implements OptionsDto {
     }
 
     public get Exclude(): Array<string> | string | undefined {
-        return this.options.exclude;
+        return this.options.Exclude;
+    }
+
+    public get Silence(): boolean {
+        return this.options.Silence!;
     }
 
 }

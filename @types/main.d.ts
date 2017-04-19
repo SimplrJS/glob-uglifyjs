@@ -6,8 +6,14 @@ export declare class GlobsUglifyJs {
     private options;
     private filesList;
     private filesDetails;
+    private uglified;
     GetFilesList(): Promise<string[]>;
-    Uglify(porcessLimit?: number): Promise<void>;
+    Uglify(processLimit?: number): Promise<void>;
+    private handlerInfo;
+    private handleStarter(processLimit);
+    private tryToStartHandle();
+    private onFileHandled();
+    private startHandlingFile(index);
     private handleError(error);
     private removeSources(successFiles);
     private uglifyItem(file);

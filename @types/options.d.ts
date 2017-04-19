@@ -9,11 +9,13 @@ export interface OptionsDto {
     RootDir?: string;
     RemoveSource?: boolean;
     Debug?: boolean;
-    exclude?: Array<string> | string;
+    Exclude?: Array<string> | string;
+    Silence?: boolean;
 }
 export declare class Options implements OptionsDto {
     constructor(importData?: OptionsDto);
     private options;
+    ToObject(): OptionsDto;
     readonly UseMinExt: boolean;
     readonly MinifyOptions: uglifyjs.MinifyOptions;
     readonly OutDir: string;
@@ -22,4 +24,5 @@ export declare class Options implements OptionsDto {
     readonly RemoveSource: boolean;
     readonly Debug: boolean;
     readonly Exclude: Array<string> | string | undefined;
+    readonly Silence: boolean;
 }
