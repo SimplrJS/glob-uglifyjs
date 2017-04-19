@@ -67,7 +67,8 @@ $ glob-uglifyjs -h
 |  RootDir        | `string`             | ` `             | Specifies the root directory of input files.                                       |
 |  RemoveSource   | `boolean`            | `false`         | Remove all source files specified by glob pattern.                                 |
 |  Debug          | `boolean`            | `false`         | Show errors details information.                                                   |
-|  exclude        | `string` \| `string[]` | `undefined`     | Add a pattern or an array of glob patterns to exclude matches. Read more in [node-glob options](https://github.com/isaacs/node-glob#options) `ignore`. |
+|  Silence        | `boolean`            | `false`         | Silence all messages in console.                                                   |
+|  Exclude      | `string` \| `string[]` | `undefined`     | Add a pattern or an array of glob patterns to exclude matches. Read more in [node-glob options](https://github.com/isaacs/node-glob#options) `ignore`. |
 |  Cwd            | `string`             | `process.cwd()` | Current working directory.                                                         |
 
 
