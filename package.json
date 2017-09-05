@@ -1,6 +1,6 @@
 {
   "name": "glob-uglifyjs",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0",
   "description": "Uglify JS files with glob pattern.",
   "main": "dist/main.js",
   "types": "@types/main.d.ts",
