@@ -35,4 +35,4 @@ class RejectionError {
         throw this.error;
     }
 }
-exports.default = RejectionError;
+exports.RejectionError = RejectionError;

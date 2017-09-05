@@ -1,324 +1,250 @@
 import * as uglifyjs from "uglify-js";
 import * as glob from "glob";
 import * as path from "path";
-import OptionsConstructor, { Options } from "./options";
-import * as fs from "fs";
-import RejectionError from "./rejection-error";
+import { Options, OptionsDto } from "./options";
+import * as fs from "mz/fs";
+import { RejectionError } from "./rejection-error";
+
+import * as Directories from "./utils/directories";
 
 const JS_EXTENSION = ".js";
 const MINIFY_EXTENSION_PREFIX = ".min";
 
-
-
-class RecursiveUglifyResults {
-    private succeed = 0;
-    private failed = 0;
-
-    get Succeed() {
-        return this.succeed;
-    }
-
-    get Failed() {
-        return this.failed;
-    }
-
-    OnSucceed() {
-        this.succeed++;
-    }
-
-    OnFailed() {
-        this.failed++;
-    }
-
+enum Status {
+    Init,
+    Pending,
+    Completed,
+    Failed
 }
-
-
 
 export class GlobsUglifyJs {
 
-    private globPattern: string;
-
-    private options: OptionsConstructor;
-
-    constructor(globPattern: string, options?: Options) {
-        this.options = new OptionsConstructor(options);
-        if (!this.validateExtension(globPattern)) {
-            globPattern = this.addJsExtension(globPattern);
+    constructor(globPattern: string, options?: OptionsDto) {
+        this.options = new Options(options);
+        const globExt = path.extname(globPattern);
+        if (!globExt) {
+            globPattern += JS_EXTENSION;
+        } else if (globExt === ".") {
+            globPattern += JS_EXTENSION.slice(1);
+        } else if (!this.options.Silence) {
+            console.log(`Using custom '${globExt}' extension.`);
         }
-        this.globPattern = path.join(this.options.RootDir, globPattern);
-
-        this.main();
-    }
-
-    private async main() {
-
-        let globOptions: glob.IOptions | undefined;
 
         if (this.options.Exclude !== undefined) {
-            globOptions = { ignore: this.options.Exclude };
+            this.globOptions = { ignore: this.options.Exclude };
+        }
+
+        this.globPattern = path.join(this.options.RootDir, globPattern);
+    }
+
+    private globOptions: glob.IOptions | undefined;
+
+    private globPattern: string;
+
+    private options: Options;
+
+    private filesList: string[] | undefined;
+
+    private filesDetails: Array<{ Index: number; Status: Status }> | undefined;
+
+    private uglified: boolean = false;
+
+    public async GetFilesList(): Promise<string[]> {
+        if (this.filesList != null) {
+            return this.filesList;
+        }
+        let filesList: string[];
+        try {
+            filesList = await this.getGlobFilesList(this.globPattern, this.globOptions);
+        } catch (error) {
+            if (this.options.Debug && !this.options.Silence) {
+                console.error(error);
+            }
+            throw new Error(`Failed to find files by specified glob '${this.globPattern}'.`);
+        }
+        if (!this.options.Silence) {
+            console.log(`Found ${filesList.length} files with glob pattern '${this.globPattern}'.`);
+        }
+        this.filesList = filesList;
+        this.filesDetails = this.filesList.map((value, index) => {
+            return { Index: index, Status: Status.Init };
+        });
+        return this.filesList;
+    }
+
+    public async Uglify(processLimit: number = 3): Promise<void> {
+        if (this.uglified && !this.options.Silence) {
+            console.warn("Files already uglified.");
+            return;
+        }
+        let filesList: string[];
+        if (this.filesList == null) {
+            filesList = await this.GetFilesList();
+        } else {
+            filesList = this.filesList;
+        }
+
+        if (filesList.length === 0 && !this.options.Silence) {
+            console.warn(`No files found matching specified glob pattern (${this.globPattern}).`);
+            return;
+        }
+
+        await this.handleStarter(processLimit);
+
+        const results = {
+            Success: this.filesDetails!.filter(x => x.Status === Status.Completed).map(x => filesList[x.Index]),
+            Failed: this.filesDetails!.filter(x => x.Status === Status.Failed).map(x => filesList[x.Index])
+        };
+
+        if (this.options.RemoveSource) {
+            try {
+                await this.removeSources(results.Success);
+            } catch (error) {
+                this.handleError(error);
+            }
+        }
+
+        if (!this.options.Silence) {
+            if (results.Failed.length > 0) {
+                console.warn(`Failed to minify ${results.Failed.length} file${(results.Failed.length > 1) ? "s" : ""}.`);
+            }
+            if (results.Success.length > 0) {
+                console.log(`Successfully minified ${results.Success.length} file${(results.Success.length > 1) ? "s" : ""}.`);
+            }
+        }
+    }
+
+    private handlerInfo: {
+        Resolve: () => void;
+        Reject: () => void;
+        ProcessLimit: number;
+        ActiveProcess: number;
+    };
+
+    private handleStarter(processLimit: number) {
+        return new Promise<void>((resolve, reject) => {
+            this.handlerInfo = {
+                Reject: reject,
+                Resolve: resolve,
+                ProcessLimit: processLimit,
+                ActiveProcess: 0
+            };
+            this.tryToStartHandle();
+        });
+    }
+
+    private tryToStartHandle() {
+        if (this.handlerInfo.ActiveProcess >= this.handlerInfo.ProcessLimit) {
+            return;
+        }
+
+        if (this.filesDetails == null) {
+            return;
+        }
+
+        const index = this.filesDetails.findIndex(x => x.Status === Status.Init);
+        if (index === -1) {
+            return;
+        }
+
+        this.handlerInfo.ActiveProcess++;
+        this.startHandlingFile(index);
+        this.tryToStartHandle();
+    }
+
+    private onFileHandled() {
+        this.handlerInfo.ActiveProcess--;
+        if (this.filesDetails == null) {
+            return;
+        }
+        const completedList = this.filesDetails.filter(x => x.Status === Status.Completed || x.Status === Status.Failed);
+        if (completedList.length !== this.filesDetails.length) {
+            this.tryToStartHandle();
+            return;
+        }
+        this.uglified = true;
+        this.handlerInfo.Resolve();
+    }
+
+    private async startHandlingFile(index: number) {
+        if (this.filesDetails == null || this.filesList == null) {
+            this.onFileHandled();
+            return;
+        }
+
+        const file = this.filesList[this.filesDetails[index].Index];
+        if (file == null) {
+            this.onFileHandled();
+            return;
         }
 
         try {
-
-            let filesList = await this.getGlobs(this.globPattern, globOptions);
-
-            if (filesList.length === 0) {
-                console.log("No files found.");
-                return;
-            }
-
-            let results = await this.startRecursiveUglify(filesList.slice(0));
-
-            if (this.options.RemoveSource) {
-                await this.deleteFiles(filesList.slice(0));
-                await this.deleteEmptyDirectories(this.options.RootDir);
-            }
-
-            if (results.Failed > 0) {
-                console.warn(`Failed to minify ${results.Failed} file${(results.Failed > 1) ? "s" : ""}.`);
-            }
-            if (results.Succeed > 0) {
-                console.log(`Successfully minified ${results.Succeed} file${(results.Succeed > 1) ? "s" : ""}.`);
-            }
-
+            this.filesDetails[index].Status = Status.Pending;
+            await this.uglifyItem(file);
+            this.filesDetails[index].Status = Status.Completed;
         } catch (error) {
+            this.filesDetails[index].Status = Status.Failed;
+            this.handleError(error);
+        }
+
+        this.onFileHandled();
+    }
+
+
+    private handleError(error: any) {
+        if (!this.options.Silence) {
             if (error instanceof RejectionError) {
-                error.ThrowError();
-            } else {
-                throw error;
+                error.LogError(this.options.Debug);
+            } else if (this.options.Debug && !this.options.Silence) {
+                console.error(error);
             }
         }
     }
 
-    private async deleteFiles(fileList: Array<string>) {
-        return new Promise<never>(async (resolve, reject) => {
-            let rejected = false;
-            let file = fileList.shift();
-
-            if (file == null) {
-                resolve();
-                return;
-            }
-
-            await this.deleteFile(file)
-                .catch(error => {
-                    rejected = true;
-                    reject(new RejectionError(error, "deleteFile"));
-                });
-
-            if (!rejected) {
-                await this.deleteFiles(fileList);
-                resolve();
-            }
-        });
-    }
-
-    private async deleteFile(filePath: string) {
-        return new Promise<never>((resolve, reject) => {
-            fs.unlink(filePath, error => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
-
-    private async uglifyFile(file: string, options?: uglifyjs.MinifyOptions) {
-        return new Promise<uglifyjs.MinifyOutput>((resolve, reject) => {
+    private async removeSources(successFiles: string[]) {
+        for (const file of successFiles) {
             try {
-                let outputData = uglifyjs.minify(file, options);
-                resolve(outputData);
+                await fs.unlink(file);
             } catch (error) {
-                reject(error);
+                throw new RejectionError(error, "deleteFile");
             }
-        });
+        }
+        try {
+            await Directories.RemoveEmptyDirectories(this.options.RootDir);
+        } catch (error) {
+            throw new RejectionError(error, "deleteEmptyDirectories");
+        }
     }
 
-    private async startRecursiveUglify(filesList: Array<string>, results?: RecursiveUglifyResults) {
-        return new Promise<RecursiveUglifyResults>(async (resolve) => {
-            if (results == null) {
-                results = new RecursiveUglifyResults();
-            }
-            let file = filesList.shift();
-            if (file != null) {
-                try {
-                    await this.recursiveUglify(file);
-                    results.OnSucceed();
-                } catch (error) {
-                    if (error instanceof RejectionError) {
-                        error.LogError(this.options.Debug);
-                    } else if (this.options.Debug) {
-                        console.error(error);
-                    }
-                    results.OnFailed();
-                }
-                resolve(await this.startRecursiveUglify(filesList, results));
-            } else {
-                resolve(results);
-            }
-        });
+
+    private async uglifyItem(file: string): Promise<void> {
+        let outputData: uglifyjs.MinifyOutput;
+        try {
+            outputData = await this.uglifyFile(file, this.options.MinifyOptions)
+        } catch (error) {
+            throw new RejectionError(error, "uglifyFile", file);
+        }
+
+        const outPath = this.buildOutFilePath(file);
+
+        try {
+            await Directories.MakeTree(outPath);
+        } catch (error) {
+            throw new RejectionError(error, "ensureDirectoryExistence", file);
+        }
+
+        try {
+            await fs.writeFile(outPath, outputData.code, { encoding: "utf-8", flag: "w" });
+        } catch (error) {
+            throw new RejectionError(error, "writeToFile", file);
+        }
     }
 
-    private async recursiveUglify(file: string) {
-        return new Promise<never>(async (resolve, reject) => {
-            try {
-                let outputData = await this.uglifyFile(file, this.options.MinifyOptions)
-                    .catch(error => {
-                        throw new RejectionError(error, "uglifyFile", file);
-                    }) as uglifyjs.MinifyOutput;
+    private buildOutFilePath(filePath: string): string {
+        const parsedPath = path.parse(filePath);
 
-                let outPath = this.resolveOutFilePath(file);
-
-                await this.ensureDirectoryExistence(outPath)
-                    .catch(error => {
-                        throw new RejectionError(error, "ensureDirectoryExistence", file);
-                    });
-
-                await this.writeToFile(outPath, outputData.code)
-                    .catch(error => {
-                        throw new RejectionError(error, "writeToFile", file);
-                    });
-
-                resolve();
-
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    private async ensureDirectoryExistence(filePath: string) {
-        return new Promise<never>(async (resolve, reject) => {
-            let rejected = false;
-            let dirname = path.dirname(filePath);
-            let directoryExist = await this.directoryExists(dirname);
-            if (directoryExist) {
-                resolve();
-                return;
-            }
-            await this.ensureDirectoryExistence(dirname)
-                .catch(error => {
-                    reject(error);
-                    rejected = true;
-                });
-
-            if (rejected) {
-                return;
-            }
-
-            fs.mkdir(dirname, error => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
-
-    private async directoryExists(path: string) {
-        return new Promise<boolean>(resolve => {
-            fs.stat(path, (error, stats) => {
-                if (error) {
-                    resolve(false);
-                } else {
-                    resolve(stats.isDirectory());
-                }
-            });
-        });
-    }
-
-    private async deleteEmptyDirectories(directoryPath: string) {
-        return new Promise(async (resolve, reject) => {
-            let rejected = false;
-            let isExist = await this.directoryExists(directoryPath);
-            if (!isExist) {
-                resolve(); // or reject?
-                return;
-            }
-
-            let files = await this.readFilesInDirectory(directoryPath);
-
-            if (files.length > 0) {
-                for (let i = 0; i < files.length; i++) {
-                    let file = files[i];
-                    var fullPath = path.join(directoryPath, file);
-                    await this.deleteEmptyDirectories(fullPath)
-                        .catch(error => {
-                            reject(new RejectionError(error, "deleteEmptyDirectories"));
-                            rejected = true;
-                        });
-                    if (rejected) {
-                        break;
-                    }
-                }
-
-                if (rejected) {
-                    return;
-                }
-                files = await this.readFilesInDirectory(directoryPath);
-            }
-
-            if (files.length === 0) {
-                await this.removeDirectory(directoryPath)
-                    .catch(error => {
-                        reject(new RejectionError(error, "removeDirectory"));
-                        rejected = true;
-                    });
-            }
-
-            if (!rejected) {
-                resolve();
-            }
-
-        });
-    }
-
-    private async removeDirectory(directoryPath: string) {
-        return new Promise<never>((resolve, reject) => {
-            fs.rmdir(directoryPath, error => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
-
-    private async readFilesInDirectory(directoryPath: string) {
-        return new Promise<Array<string>>((resolve, reject) => {
-            fs.readdir(directoryPath, (error, files) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(files);
-                }
-            });
-        });
-    }
-
-    /**
-     * Check if parsed name without extension has minified extension prefix.
-     * 
-     * @private
-     * @param {string} nameWithoutExt Parsed file name without extension.
-     * @returns
-     * 
-     * @memberOf GlobsUglifyJs
-     */
-    private hasMinifiedExt(nameWithoutExt: string) {
-        let ext = path.extname(nameWithoutExt);
-        return (ext != null && ext === MINIFY_EXTENSION_PREFIX);
-    }
-
-    private resolveOutFilePath(filePath: string) {
-        let parsedPath = path.parse(filePath),
-            targetExt = parsedPath.ext;
-
-        if (this.options.UseMinExt && !this.hasMinifiedExt(parsedPath.name)) {
+        let targetExt = parsedPath.ext;
+        if (this.options.UseMinExt && targetExt !== MINIFY_EXTENSION_PREFIX) {
             targetExt = MINIFY_EXTENSION_PREFIX + targetExt;
         }
 
@@ -333,40 +259,25 @@ export class GlobsUglifyJs {
         });
     }
 
-    /**
-     * Asynchronously write data to file with flag "wx".
-     * 
-     * @private
-     * @param {string} filePath File path.
-     * @param {string} data Data in "utf-8".
-     * @returns
-     * 
-     * @memberOf GlobsUglifyJs
-     */
-    private async writeToFile(filePath: string, data: string) {
-        return new Promise<never>((resolve, reject) => {
-            fs.writeFile(filePath, data, { encoding: "utf-8", flag: "w" }, (error) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
+    private async uglifyFile(file: string, options?: uglifyjs.MinifyOptions): Promise<uglifyjs.MinifyOutput> {
+        return new Promise<uglifyjs.MinifyOutput>((resolve, reject) => {
+            try {
+                let outputData = uglifyjs.minify(file, options);
+                resolve(outputData);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
     /**
      * Asynchronously return files list by pattern.
      * 
-     * @private
      * @param {string} pattern
      * @param {glob.IOptions} [options={}]
-     * @returns
-     * 
-     * @memberOf GlobsUglifyJs
      */
-    private async getGlobs(pattern: string, options: glob.IOptions = {}) {
-        return new Promise<Array<string>>((resolve, reject) => {
+    private async getGlobFilesList(pattern: string, options: glob.IOptions = {}): Promise<string[]> {
+        return new Promise<string[]>((resolve, reject) => {
             glob(pattern, options, (err, matches) => {
                 if (err != null) {
                     reject(err);
@@ -374,38 +285,6 @@ export class GlobsUglifyJs {
                     resolve(matches);
                 }
             });
-
         });
     }
-
-    /**
-     * Validate JS extension.
-     * 
-     * @private
-     * @param {string} pattern
-     * @returns {boolean} True if extension exist.
-     * 
-     * @memberOf GlobsUglifyJs
-     */
-    private validateExtension(pattern: string): boolean {
-        let ext = path.extname(pattern);
-        if (ext.length !== 0 && ext !== JS_EXTENSION) {
-            console.warn("Using custom extension: ", ext);
-        }
-        return (ext != null && ext.length > 0);
-    }
-
-    /**
-     * Add .js to glob pattern.
-     * 
-     * @private
-     * @param {string} pattern
-     * @returns {string}
-     * 
-     * @memberOf GlobsUglifyJs
-     */
-    private addJsExtension(pattern: string): string {
-        return pattern + JS_EXTENSION;
-    }
-
 }

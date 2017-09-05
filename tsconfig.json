@@ -13,7 +13,9 @@
         "noImplicitUseStrict": true,
         "strictNullChecks": true,
         "skipDefaultLibCheck": true,
+        "skipLibCheck": true,
         "declaration": true,
+        "declarationDir": "@types",
         "jsx": "react",
         "typeRoots": [
             "node_modules/@types"
@@ -25,6 +27,7 @@
     "exclude": [
         "node_modules",
         "dist",
-        "@types"
+        "@types",
+        "src/**/_*.ts*"
     ]
 }

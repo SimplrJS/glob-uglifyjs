@@ -1,11 +1,11 @@
 /// <reference types="node" />
-export default class RejectionError {
+export declare class RejectionError {
     private error;
     private type;
     private uniqId;
-    constructor(error: NodeJS.ErrnoException | Error, type?: string, uniqId?: string);
+    constructor(error: NodeJS.ErrnoException | Error, type?: string | undefined, uniqId?: string | undefined);
     readonly Type: string | undefined;
-    readonly Error: Error | NodeJS.ErrnoException;
+    readonly Error: NodeJS.ErrnoException | Error;
     readonly UniqId: string | undefined;
     private showErrorDetails();
     LogError(debug?: boolean): void;

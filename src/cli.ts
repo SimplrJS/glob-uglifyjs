@@ -2,4 +2,13 @@
 import Arguments from "./arguments";
 import { GlobsUglifyJs } from "./main";
 
-new GlobsUglifyJs(Arguments.pattern, Arguments.options || {});
+async function CliStarter() {
+    if (Arguments.uglifyProcessLimit <= 0) {
+        throw new Error("Uglify process limit must be at least 1.");
+    }
+
+    const globUglifier = new GlobsUglifyJs(Arguments.pattern, Arguments.options || {});
+    await globUglifier.Uglify(Arguments.uglifyProcessLimit);
+}
+
+CliStarter();

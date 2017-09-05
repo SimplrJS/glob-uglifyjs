@@ -1,6 +1,6 @@
 /// <reference types="uglify-js" />
 import * as uglifyjs from "uglify-js";
-export interface Options {
+export interface OptionsDto {
     [key: string]: any;
     UseMinExt?: boolean;
     MinifyOptions?: uglifyjs.MinifyOptions;
@@ -9,11 +9,13 @@ export interface Options {
     RootDir?: string;
     RemoveSource?: boolean;
     Debug?: boolean;
-    exclude?: Array<string> | string;
+    Exclude?: Array<string> | string;
+    Silence?: boolean;
 }
-export default class OptionsConstructor implements Options {
-    constructor(importData?: Options);
+export declare class Options implements OptionsDto {
+    constructor(importData?: OptionsDto);
     private options;
+    ToObject(): OptionsDto;
     readonly UseMinExt: boolean;
     readonly MinifyOptions: uglifyjs.MinifyOptions;
     readonly OutDir: string;
@@ -22,4 +24,5 @@ export default class OptionsConstructor implements Options {
     readonly RemoveSource: boolean;
     readonly Debug: boolean;
     readonly Exclude: Array<string> | string | undefined;
+    readonly Silence: boolean;
 }

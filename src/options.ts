@@ -1,7 +1,7 @@
 import * as uglifyjs from "uglify-js";
 import * as process from "process";
 
-export interface Options {
+export interface OptionsDto {
     [key: string]: any;
     UseMinExt?: boolean;
     MinifyOptions?: uglifyjs.MinifyOptions;
@@ -10,12 +10,14 @@ export interface Options {
     RootDir?: string;
     RemoveSource?: boolean;
     Debug?: boolean;
-    exclude?: Array<string> | string;
+    Exclude?: Array<string> | string;
+    Silence?: boolean;
 }
 
-export default class OptionsConstructor implements Options {
 
-    constructor(importData?: Options) {
+export class Options implements OptionsDto {
+
+    constructor(importData?: OptionsDto) {
         if (importData != null) {
             if (importData.Cwd != null) {
                 if (importData.Cwd.length > 0) {
@@ -27,13 +29,18 @@ export default class OptionsConstructor implements Options {
 
             Object.keys(this.options).forEach(key => {
                 if (importData[key] !== undefined) {
-                    this.options[key] = importData[key];
+                    // Deprecated: now use Exclude key.
+                    if (key === "exclude") {
+                        this.options["Exclude"] = importData[key];
+                    } else {
+                        this.options[key] = importData[key];
+                    }
                 }
             });
         }
     }
 
-    private options: Options = {
+    private options: OptionsDto = {
         MinifyOptions: {},
         UseMinExt: true,
         OutDir: "",
@@ -41,8 +48,13 @@ export default class OptionsConstructor implements Options {
         RootDir: "",
         RemoveSource: false,
         Debug: false,
-        exclude: undefined
+        Exclude: undefined,
+        Silence: false
     };
+
+    public ToObject(): OptionsDto {
+        return this.options;
+    }
 
     public get UseMinExt(): boolean {
         return this.options.UseMinExt!;
@@ -73,7 +85,11 @@ export default class OptionsConstructor implements Options {
     }
 
     public get Exclude(): Array<string> | string | undefined {
-        return this.options.exclude;
+        return this.options.Exclude;
+    }
+
+    public get Silence(): boolean {
+        return this.options.Silence!;
     }
 
 }

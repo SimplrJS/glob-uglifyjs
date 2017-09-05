@@ -1,5 +1,5 @@
 
-export default class RejectionError {
+export class RejectionError {
     constructor(private error: NodeJS.ErrnoException | Error, private type?: string, private uniqId?: string) {
     }
 
