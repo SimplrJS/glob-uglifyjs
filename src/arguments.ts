@@ -4,6 +4,7 @@ import { OptionsDto } from "./options";
 export interface Arguments {
     pattern: string;
     options: OptionsDto;
+    uglifyProcessLimit: number;
 }
 
 
@@ -25,6 +26,13 @@ export default yargs
         type: "string"
     })
     .require("pattern", "Pattern required")
+    .option("uglifyProcessLimit", {
+        describe: "Uglify process limit",
+        type: "number"
+    })
+    .default({
+        "uglifyProcessLimit": 3
+    })
     .config("config")
     .alias("c", "config")
     .default("config", "glob-uglifyjs.config.json")

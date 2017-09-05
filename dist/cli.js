@@ -12,8 +12,11 @@ const arguments_1 = require("./arguments");
 const main_1 = require("./main");
 function CliStarter() {
     return __awaiter(this, void 0, void 0, function* () {
+        if (arguments_1.default.uglifyProcessLimit <= 0) {
+            throw new Error("Uglify process limit must be at least 1.");
+        }
         const globUglifier = new main_1.GlobsUglifyJs(arguments_1.default.pattern, arguments_1.default.options || {});
-        yield globUglifier.Uglify(5);
+        yield globUglifier.Uglify(arguments_1.default.uglifyProcessLimit);
     });
 }
 CliStarter();
