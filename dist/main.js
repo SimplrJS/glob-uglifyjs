@@ -202,6 +202,9 @@ class GlobsUglifyJs {
             let outputData;
             try {
                 outputData = yield this.uglifyFile(file, this.options.MinifyOptions);
+                if (outputData.error != null) {
+                    throw outputData.error;
+                }
             }
             catch (error) {
                 throw new rejection_error_1.RejectionError(error, "uglifyFile", file);

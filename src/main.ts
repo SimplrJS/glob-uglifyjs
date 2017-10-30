@@ -219,9 +219,12 @@ export class GlobsUglifyJs {
 
 
     private async uglifyItem(file: string): Promise<void> {
-        let outputData: uglifyjs.MinifyOutput;
+        let outputData: uglifyjs.MinifyOutput & { error?: Error };
         try {
-            outputData = await this.uglifyFile(file, this.options.MinifyOptions)
+            outputData = await this.uglifyFile(file, this.options.MinifyOptions);
+            if (outputData.error != null) {
+                throw outputData.error;
+            }
         } catch (error) {
             throw new RejectionError(error, "uglifyFile", file);
         }
