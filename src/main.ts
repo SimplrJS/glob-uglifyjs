@@ -1,8 +1,9 @@
 import * as uglifyjs from "uglify-js";
-import * as glob from "glob";
+import * as globby from "globby";
+import { IOptions } from "glob";
 import * as path from "path";
 import { Options, OptionsDto } from "./options";
-import * as fs from "mz/fs";
+import * as fs from "fs-extra";
 import { RejectionError } from "./rejection-error";
 
 import * as Directories from "./utils/directories";
@@ -37,7 +38,7 @@ export class GlobsUglifyJs {
         this.globPattern = path.join(this.options.RootDir, globPattern);
     }
 
-    private globOptions: glob.IOptions | undefined;
+    private globOptions: IOptions | undefined;
 
     private globPattern: string;
 
@@ -55,7 +56,7 @@ export class GlobsUglifyJs {
         }
         let filesList: string[];
         try {
-            filesList = await this.getGlobFilesList(this.globPattern, this.globOptions);
+            filesList = await globby(this.globPattern, this.globOptions);
         } catch (error) {
             if (this.options.Debug && !this.options.Silence) {
                 console.error(error);
@@ -260,31 +261,14 @@ export class GlobsUglifyJs {
     }
 
     private async uglifyFile(file: string, options?: uglifyjs.MinifyOptions): Promise<uglifyjs.MinifyOutput> {
-        return new Promise<uglifyjs.MinifyOutput>((resolve, reject) => {
+        return new Promise<uglifyjs.MinifyOutput>(async (resolve, reject) => {
             try {
-                let outputData = uglifyjs.minify(file, options);
+                const inputData = await fs.readFile(file, "UTF-8");
+                const outputData = uglifyjs.minify(inputData, options);
                 resolve(outputData);
             } catch (error) {
                 reject(error);
             }
-        });
-    }
-
-    /**
-     * Asynchronously return files list by pattern.
-     * 
-     * @param {string} pattern
-     * @param {glob.IOptions} [options={}]
-     */
-    private async getGlobFilesList(pattern: string, options: glob.IOptions = {}): Promise<string[]> {
-        return new Promise<string[]>((resolve, reject) => {
-            glob(pattern, options, (err, matches) => {
-                if (err != null) {
-                    reject(err);
-                } else {
-                    resolve(matches);
-                }
-            });
         });
     }
 }

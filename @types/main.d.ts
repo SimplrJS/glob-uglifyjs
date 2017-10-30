@@ -19,11 +19,4 @@ export declare class GlobsUglifyJs {
     private uglifyItem(file);
     private buildOutFilePath(filePath);
     private uglifyFile(file, options?);
-    /**
-     * Asynchronously return files list by pattern.
-     *
-     * @param {string} pattern
-     * @param {glob.IOptions} [options={}]
-     */
-    private getGlobFilesList(pattern, options?);
 }

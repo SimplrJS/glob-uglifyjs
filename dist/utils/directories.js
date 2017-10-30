@@ -8,24 +8,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
-const fs = require("mz/fs");
-const mkdirp = require("mkdirp");
-function Exists(path) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const stat = yield fs.stat(path);
-            return stat.isDirectory();
-        }
-        catch (error) {
-            return false;
-        }
-    });
-}
-exports.Exists = Exists;
+const fs = require("fs-extra");
 function RemoveEmptyDirectories(directoryPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const isExist = yield Exists(directoryPath);
-        if (!isExist) {
+        const stat = yield fs.stat(directoryPath);
+        if (!stat.isDirectory()) {
             return;
         }
         let files = yield fs.readdir(directoryPath);
@@ -44,16 +31,9 @@ function RemoveEmptyDirectories(directoryPath) {
 exports.RemoveEmptyDirectories = RemoveEmptyDirectories;
 function MakeTree(filePath) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => {
-            const dirname = path.dirname(filePath);
-            mkdirp(dirname, (error, data) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-                resolve(data);
-            });
-        });
+        const dirname = path.dirname(filePath);
+        yield fs.ensureDir(dirname);
+        return dirname;
     });
 }
 exports.MakeTree = MakeTree;
