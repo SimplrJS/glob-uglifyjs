@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@types/yargs": "6.6.0",
-    "typescript": "^2.5.3"
+    "typescript": "^2.6.1"
   },
   "dependencies": {
     "@types/glob": "^5.0.33",
