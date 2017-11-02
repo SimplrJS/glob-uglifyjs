@@ -1,19 +1,9 @@
 import * as path from "path";
-import * as fs from "mz/fs";
-import * as mkdirp from "mkdirp";
-
-export async function Exists(path: string) {
-    try {
-        const stat = await fs.stat(path);
-        return stat.isDirectory();
-    } catch (error) {
-        return false;
-    }
-}
+import * as fs from "fs-extra";
 
 export async function RemoveEmptyDirectories(directoryPath: string) {
-    const isExist = await Exists(directoryPath);
-    if (!isExist) {
+    const stat = await fs.stat(directoryPath);
+    if (!stat.isDirectory()) {
         return;
     }
     let files = await fs.readdir(directoryPath);
@@ -30,14 +20,7 @@ export async function RemoveEmptyDirectories(directoryPath: string) {
 }
 
 export async function MakeTree(filePath: string): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-        const dirname = path.dirname(filePath);
-        mkdirp(dirname, (error, data) => {
-            if (error) {
-                reject(error);
-                return;
-            }
-            resolve(data);
-        });
-    });
+    const dirname = path.dirname(filePath);
+    await fs.ensureDir(dirname);
+    return dirname;
 }

@@ -1,6 +1,6 @@
 {
   "name": "glob-uglifyjs",
-  "version": "1.0.0",
+  "version": "2.0.0-beta.4",
   "description": "Uglify JS files with glob pattern.",
   "main": "dist/main.js",
   "types": "@types/main.d.ts",
@@ -24,7 +24,10 @@
     "@types",
     "**/*.md"
   ],
-  "author": "Giedrius Grabauskas <giedrius@quatrodev.com>  (https://github.com/GiedriusGrabauskas)",
+  "author": "SimplrJS <simplr@quatrodev.com> (https://github.com/simplrjs)",
+  "contributors": [
+    "Giedrius Grabauskas <giedrius@quatrodev.com>  (https://github.com/GiedriusGrabauskas)"
+  ],
   "bugs": "https://github.com/SimplrJS/glob-uglifyjs/issues",
   "repository": "SimplrJS/glob-uglifyjs",
   "homepage": "https://github.com/SimplrJS/glob-uglifyjs",
@@ -33,19 +36,17 @@
     "node": ">=6.0.0"
   },
   "devDependencies": {
-    "@types/glob": "^5.0.30",
-    "@types/mkdirp": "^0.3.29",
-    "@types/mz": "0.0.31",
     "@types/yargs": "6.6.0",
-    "fs-extra": "^2.1.2",
-    "typescript": "^2.2.2"
+    "typescript": "^2.6.1"
   },
   "dependencies": {
+    "@types/glob": "^5.0.33",
+    "@types/globby": "^6.1.0",
+    "@types/fs-extra": "^4.0.3",
     "@types/uglify-js": "^2.6.28",
-    "glob": "^7.1.1",
-    "mkdirp": "^0.5.1",
-    "mz": "^2.6.0",
-    "uglify-js": "^2.8.21",
+    "fs-extra": "^4.0.2",
+    "globby": "^6.1.0",
+    "uglify-js": "^3.1.6",
     "yargs": "^7.0.2"
   },
   "bin": {

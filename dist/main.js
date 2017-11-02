@@ -8,10 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const uglifyjs = require("uglify-js");
-const glob = require("glob");
+const globby = require("globby");
 const path = require("path");
 const options_1 = require("./options");
-const fs = require("mz/fs");
+const fs = require("fs-extra");
 const rejection_error_1 = require("./rejection-error");
 const Directories = require("./utils/directories");
 const JS_EXTENSION = ".js";
@@ -49,7 +49,7 @@ class GlobsUglifyJs {
             }
             let filesList;
             try {
-                filesList = yield this.getGlobFilesList(this.globPattern, this.globOptions);
+                filesList = yield globby(this.globPattern, this.globOptions);
             }
             catch (error) {
                 if (this.options.Debug && !this.options.Silence) {
@@ -202,6 +202,9 @@ class GlobsUglifyJs {
             let outputData;
             try {
                 outputData = yield this.uglifyFile(file, this.options.MinifyOptions);
+                if (outputData.error != null) {
+                    throw outputData.error;
+                }
             }
             catch (error) {
                 throw new rejection_error_1.RejectionError(error, "uglifyFile", file);
@@ -238,35 +241,16 @@ class GlobsUglifyJs {
     }
     uglifyFile(file, options) {
         return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 try {
-                    let outputData = uglifyjs.minify(file, options);
+                    const inputData = yield fs.readFile(file, "UTF-8");
+                    const outputData = uglifyjs.minify(inputData, options);
                     resolve(outputData);
                 }
                 catch (error) {
                     reject(error);
                 }
-            });
-        });
-    }
-    /**
-     * Asynchronously return files list by pattern.
-     *
-     * @param {string} pattern
-     * @param {glob.IOptions} [options={}]
-     */
-    getGlobFilesList(pattern, options = {}) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => {
-                glob(pattern, options, (err, matches) => {
-                    if (err != null) {
-                        reject(err);
-                    }
-                    else {
-                        resolve(matches);
-                    }
-                });
-            });
+            }));
         });
     }
 }
